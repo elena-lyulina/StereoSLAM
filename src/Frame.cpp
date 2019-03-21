@@ -8,9 +8,12 @@ using namespace cv;
 
 
 Frame::Frame (Mat &img)
-: image (img), integralImage (Mat::zeros (image.rows + 1, image.cols + 1, CV_32SC1))
+: image (img), integralImage (Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
+  xSobel (Mat::zeros (image.rows, image.cols, CV_8U)), ySobel (Mat::zeros (image.rows, image.cols, CV_8U))
 {
     fillSum ();
+    getXSobelConvolution (image, xSobel);
+    getYSobelConvolution (image, ySobel);
 }
 
 void Frame::fillSum ()
@@ -46,7 +49,7 @@ uchar saturation (int a)
 }
 
 
-Mat &Frame::getBlobConvolution(Mat &result)
+Mat &Frame::getBlobConvolution (Mat &result)
 {
     //  (-1, -1, -1, -1, -1,
     //   -1,  1,  1,  1, -1,
@@ -68,7 +71,7 @@ Mat &Frame::getBlobConvolution(Mat &result)
     return result;
 }
 
-Mat &Frame::getCornerConvolution(Mat &result)
+Mat &Frame::getCornerConvolution (Mat &result)
 {
     //  (-1, -1,  0,  1,  1,
     //   -1, -1,  0,  1,  1,
@@ -89,7 +92,6 @@ Mat &Frame::getCornerConvolution(Mat &result)
     result = result_;
     return result;
 }
-
 
 int Frame::compPartialMax (int from, int to, int *I, int *pmax)
 {
@@ -165,10 +167,7 @@ bool cmp (uchar a, uchar b, int cmp)
 }
 
 
-// founded on (2n + 1) × (2n + 1)-Block Algorithm from "Efficient Non-Maximum Suppression",
-// Alexander Neubeck, Luc Van Gool;
-// if comp == 1, then it found local maximum, else - local minimum
-void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &maximum, int comp)
+void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, int comp)
 {
     for (int i = n; i <= image.rows - n; i += n + 1)
     {
@@ -237,7 +236,7 @@ void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &maximum, in
             }
             if (flag == 0)
             {
-                maximum.emplace_back (pair<int, int> (mi, mj));
+                result.emplace_back (pair<int, int> (mi, mj));
             }
         }
     }
@@ -248,42 +247,58 @@ Mat &Frame::getIntegralImage ()
     return integralImage;
 }
 
-Mat &Frame::getXSobelConvolution(Mat image, Mat &result) {
+Mat &Frame::getXSobelConvolution ()
+{
+    return xSobel;
+}
+
+Mat &Frame::getYSobelConvolution ()
+{
+    return ySobel;
+}
+
+Mat &Frame::getXSobelConvolution (Mat image, Mat &result)
+{
     // x Sobel kernel
     // -1 0 1     [1]
     // -2 0 2  =  [2] * [-1, 0, 1]
     // -1 0 1     [1]
 
-   Mat rowMult(result.rows, result.cols, CV_16S, Scalar::all (0));
-   for (int i = 1; i < image.cols - 1; i++) {
-       subtract(image.col(i + 1), image.col(i - 1), rowMult.col(i));
-   }
+    Mat rowMult (result.rows, result.cols, CV_16S, Scalar::all (0));
+    for (int i = 1; i < image.cols - 1; i++)
+    {
+        subtract (image.col (i + 1), image.col (i - 1), rowMult.col (i));
+    }
 
-    Mat temp(1, result.cols, CV_16S, Scalar::all (0));
-   for (int i = 1; i < rowMult.rows - 1;  i++) {
-       add(2 * rowMult.row(i), rowMult.row(i - 1), temp);
-       add(temp, rowMult.row(i + 1), result.row(i));
-   }
+    Mat temp (1, result.cols, CV_16S, Scalar::all (0));
+    for (int i = 1; i < rowMult.rows - 1; i++)
+    {
+        add (2 * rowMult.row (i), rowMult.row (i - 1), temp);
+        add (temp, rowMult.row (i + 1), result.row (i));
+    }
 
-   return result;
+    return result;
 }
 
-Mat &Frame::getYSobelConvolution(Mat image, Mat &result) {
+Mat &Frame::getYSobelConvolution (Mat image, Mat &result)
+{
     // y Sobel kernel
     //  1  2  1     [1]
     //  0  0  0  =  [0] * [1, 2, 1]
     // -1 -2 -1     [-1]
 
-    Mat rowMult(result.rows, result.cols, CV_16S, Scalar::all (0));
-    Mat temp(result.rows, 1, CV_16S, Scalar::all (0));
+    Mat rowMult (result.rows, result.cols, CV_16S, Scalar::all (0));
+    Mat temp (result.rows, 1, CV_16S, Scalar::all (0));
 
-    for (int i = 1; i < image.rows - 1;  i++) {
-        subtract(image.row(i - 1), image.row(i + 1), rowMult.row(i));
+    for (int i = 1; i < image.rows - 1; i++)
+    {
+        subtract (image.row (i - 1), image.row (i + 1), rowMult.row (i));
     }
 
-    for (int i = 1; i < rowMult.cols - 1; i++) {
-        add(2 * rowMult.col(i), rowMult.col(i - 1), temp);
-        add(temp, rowMult.col(i + 1), result.col(i));
+    for (int i = 1; i < rowMult.cols - 1; i++)
+    {
+        add (2 * rowMult.col (i), rowMult.col (i - 1), temp);
+        add (temp, rowMult.col (i + 1), result.col (i));
     }
 
     return result;

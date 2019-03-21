@@ -10,29 +10,40 @@ using namespace cv;
 
 class Frame
 {
-public:
-    Frame (Mat &img);
+    public:
+    explicit Frame (Mat &img);
     Mat &getIntegralImage ();
-    Mat &getBlobConvolution(Mat &result);
-    Mat &getCornerConvolution(Mat &result);
-    Mat &getXSobelConvolution(Mat image, Mat &result);
-    Mat &getYSobelConvolution(Mat image, Mat &result);
+    Mat &getXSobelConvolution ();
+    Mat &getYSobelConvolution ();
+    Mat &getBlobConvolution (Mat &result);
+    Mat &getCornerConvolution (Mat &result);
+    static Mat &getXSobelConvolution (Mat image, Mat &result);
+    static Mat &getYSobelConvolution (Mat image, Mat &result);
     int rectSum (int x, int y, int width, int height);
+
+    // unused
     int compPartialMax (int from, int to, int *I, int *pmax);
     void suppression1D (int n, int *I, int size, vector<int> &maximum);
-    void suppression2D (int n, Mat image, vector<pair<int, int>> &maximum, int comp);
-
-
-private:
-    Mat image;
-    Mat integralImage;
 
     /*
-     * Counting sum of squared pixels intensities, starting from the top left corner (taken as (0,0)
-     * coordinate); The sum of pixels intensities, placed between (0,0) and (i,j) is stored at (i,j)
-     * coordinates in integralImage mat, assuming that integralImage mat has the same size as image
-     * todo: check size of result mat? find better solution?
-     * todo: find out comment style in c++
+     Founded on (2n + 1) × (2n + 1)-Block Algorithm from "Efficient Non-Maximum Suppression",
+     Alexander Neubeck, Luc Van Gool;
+     if comp == 1, then it found local maximum, else - local minimum
+     fills vector of pairs(i, j), where i stands for row coordinate, j - for col coordinate
+     */
+    void suppression2D (int n, Mat image, vector<pair<int, int>> &result, int comp);
+
+
+    private:
+    Mat image;
+    Mat integralImage;
+    Mat xSobel;
+    Mat ySobel;
+
+    /*
+      Counting sum of squared pixels intensities, starting from the top left corner (taken as (0,0)
+      coordinate); The sum of pixels intensities, placed between (0,0) and (i,j) is stored at (i,j)
+      coordinates in integralImage mat, assuming that integralImage mat has the same size as image
      */
     void fillSum ();
 };

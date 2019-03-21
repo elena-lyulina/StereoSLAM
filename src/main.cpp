@@ -1,3 +1,5 @@
+#include "FeatureDetection.h"
+#include "FeaturePoint.h"
 #include "Frame.h"
 #include <iostream>
 #include <opencv2/highgui.hpp>
@@ -9,102 +11,80 @@ using namespace cv;
 
 int main (int argc, char *argv[])
 {
-    const char *filename;
+    const char *filename1;
+    const char *filename2;
     if (argc >= 2)
     {
-        filename = argv[1];
+        filename1 = argv[1];
+        filename2 = argv[2];
     }
     else
     {
         cerr << "No file path found" << endl;
         return 1;
     }
-    //
-    //    Mat image;
-    //    image = imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
-    //
-    //    if (image.empty ())
-    //    {
-    //        cerr << "Can't open image [" << filename << "]" << endl;
-    //        return -1;
-    //    }
 
-    Mat image (100, 100, CV_8UC1, Scalar (30, 255, 2));
-    namedWindow ("Input", WINDOW_AUTOSIZE);
-    namedWindow ("My filtering", WINDOW_AUTOSIZE);
+    vector<const char *> filenames{ filename1, filename2 };
+    vector<Mat> images;
+    vector<Mat> imagesRGB;
+    vector<Mat> results;
+    vector<Frame> frames;
+    vector<vector<pair<int, int>>> blobMaxCoord;
+    vector<vector<FeaturePoint>> blobMaxPoints;
 
-
-    Mat result (image.rows, image.cols, CV_16UC1, Scalar::all (0));
-
-    Frame frame (image);
-    frame.getBlobConvolution(result);
-
-
-    // checking 2d suppression
-    // first of all, convert image to 2d array
-    auto **array_ = new uchar *[result.rows];
-    for (int i = 0; i < result.rows; i++)
-        array_[i] = new uchar[result.cols];
-
-    for (int i = 0; i < result.cols; i++)
-        array_[i] = result.ptr<uchar> (i);
-
-
-    // now i need to transonse it; todo: find better way to get 2d data!
-
-    auto **array = new uchar *[result.cols];
-    for (int i = 0; i < result.cols; i++)
-        array[i] = new uchar[result.rows];
-
-    for (int i = 0; i < result.rows; i++)
+    // checking 'blob max' class of feature points
+    int n = 10;
+    for (int i = 0; i < 2; i++)
     {
-        for (int j = 0; j < result.cols; j++)
+        images.emplace_back (imread (filenames[i], CV_LOAD_IMAGE_GRAYSCALE));
+        imagesRGB.emplace_back(Mat(images[i].rows, images[i].cols, CV_8UC3, Scalar::all (0)));
+        cvtColor(images[i], imagesRGB[i], CV_GRAY2RGB);
+
+        frames.emplace_back (Frame (images[i]));
+        results.emplace_back (Mat (images[i].rows, images[i].cols, CV_8U, Scalar::all (0)));
+
+        blobMaxCoord.emplace_back (vector<pair<int, int>> ());
+        frames[i].suppression2D (n, frames[i].getBlobConvolution (results[i]), blobMaxCoord[i], 1);
+
+        blobMaxPoints.emplace_back (vector<FeaturePoint> ());
+        for (auto p : blobMaxCoord[i])
         {
-            array[j][i] = array_[i][j];
+            blobMaxPoints[i].emplace_back (FeaturePoint (frames[i], p.first, p.second));
         }
     }
 
 
-    vector<pair<int, int>> vect2dMax;
-    vector<pair<int, int>> vect2dMin;
-    Mat image3 = Mat::zeros (result.rows, result.cols, CV_16UC3);
-    cvtColor (image, image3, COLOR_GRAY2BGR);
-    frame.suppression2D (20, array, result.rows, result.cols, vect2dMax, 1);
-    frame.suppression2D (20, array, result.rows, result.cols, vect2dMin, -1);
-    //    for (auto x : vect2dMax)
-    //    {
-    //        std::cout << x.first << " " << x.second << "\n";
-    //        circle (image3, Point (x.first, x.second), 2, Scalar (66, 244, 78), -1);
-    //    }
+    vector<pair<FeaturePoint, FeaturePoint>> matches;
+    int error = 1;
 
-    for (auto x : vect2dMin)
-    {
-        std::cout << x.first << " " << x.second << "\n";
-        circle (image3, Point (x.first, x.second), 3, Scalar (65, 65, 245), -1);
+    cout << "match size " << matches.size() << endl;
+    FeatureDetection::findMatches (blobMaxPoints[0], blobMaxPoints[1], matches, error);
+    cout << "match size " << matches.size() << endl;
+
+
+    RNG rng(12345);
+    Scalar color = Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255));
+
+    for (auto m : matches) {
+        cout << m.first.row << " " << m.first.col << endl;
+        cout << m.second.row << " " << m.second.col << endl;
+
+        circle (imagesRGB[0], Point (m.first.row, m.first.col), 5, color, -1);
+        circle (imagesRGB[1], Point (m.second.row, m.second.col), 5, color, -1);
+        color = Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255));
     }
 
+    namedWindow ("image1", WINDOW_AUTOSIZE);
+    namedWindow ("image2", WINDOW_AUTOSIZE);
 
-    imshow ("My filtering", result);
-    imshow ("Input", image3);
+//    namedWindow ("result1", WINDOW_AUTOSIZE);
+//    namedWindow ("result2", WINDOW_AUTOSIZE);
 
+    imshow ("image1", imagesRGB[0]);
+    imshow ("image2", imagesRGB[1]);
 
-    // Free each sub-array
-    //    for(int i = 0; i < result.cols; i++) {
-    //        delete[] array_[i];
-    //    }
-    ////    //Free the array of pointers
-    ////    delete[] array_;
-    //
-    //    //Free each sub-array
-    //    for(int i = 0; i < result.cols; i++) {
-    //        delete[] array[i];
-    //    }
-    //    //Free the array of pointers
-    //    delete[] array;
-
-
-    //    imshow("Reliable filtering", filtered);
-
+//    imshow ("result1", results[0]);
+//    imshow ("result2", results[1]);
 
     waitKey ();
     return 0;
