@@ -46,6 +46,8 @@ class Frame
       coordinates in integralImage mat, assuming that integralImage mat has the same size as image
      */
     void fillSum ();
+
+    Mat &rectSumMat(int sideLength, Mat &result);
 };
 
 #endif // STEREOSLAM_FRAME_H

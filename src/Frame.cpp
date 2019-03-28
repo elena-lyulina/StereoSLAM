@@ -8,8 +8,8 @@ using namespace cv;
 
 
 Frame::Frame (Mat &img)
-: image (img), integralImage (Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
-  xSobel (Mat::zeros (image.rows, image.cols, CV_8U)), ySobel (Mat::zeros (image.rows, image.cols, CV_8U))
+    : image (img), integralImage (Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
+      xSobel (Mat::zeros (image.rows, image.cols, CV_8U)), ySobel (Mat::zeros (image.rows, image.cols, CV_8U))
 {
     fillSum ();
     getXSobelConvolution (image, xSobel);
@@ -37,17 +37,29 @@ void Frame::fillSum ()
 int Frame::rectSum (int x, int y, int width, int height)
 {
     return integralImage.at<uint> (y + height, x + width) - integralImage.at<uint> (y + height, x) -
-           integralImage.at<uint> (y, x + width) + integralImage.at<uint> (y, x);
+        integralImage.at<uint> (y, x + width) + integralImage.at<uint> (y, x);
 }
 
-uchar saturation (int a)
-{
-    if (a > 255) return 255;
-    if (a < 0) return 0;
 
-    return (uchar)a;
+
+
+
+Mat &Frame::rectSumMat(int sideLength, Mat &result) {
+
+    int width = integralImage.cols - sideLength;
+    int height = integralImage.rows - sideLength;
+    int n = sideLength / 2;
+
+    result = integralImage(Rect(sideLength, sideLength, width, height))
+        - integralImage(Rect(0, sideLength, width, height))
+        + integralImage(Rect(0, 0, width, height))
+        - integralImage(Rect(sideLength, 0, width, height));
+
+    copyMakeBorder(result, result, n, n, n, n, BORDER_CONSTANT);
+
+
+    return result;
 }
-
 
 Mat &Frame::getBlobConvolution (Mat &result)
 {
@@ -56,110 +68,53 @@ Mat &Frame::getBlobConvolution (Mat &result)
     //   -1,  1,  8,  1, -1,
     //   -1,  1,  1,  1, -1,
     //   -1, -1, -1, -1, -1 )
-    Mat_<uchar> result_ = result;
+
     int n = 2;
-    for (int i = n; i < image.rows - n; i++)
-    {
-        for (int j = n; j < image.cols - n; j++)
-        {
-            result_[i][j] = saturation (-rectSum (j - n, i - n, 2 * n + 1, 2 * n + 1) +
-                                        2 * rectSum (j - n + 1, i - n + 1, 2 * n - 1, 2 * n - 1) +
-                                        7 * image.at<uchar> (i, j));
-        }
-    }
-    result = result_;
+
+    Mat temp, temp1, temp2;
+    image.convertTo(temp2, CV_32S);
+    result = 2 * rectSumMat(n + 1, temp) - rectSumMat(2 * n + 1, temp1) + 7 * temp2;
+    cv::rectangle (result,
+                   cv::Rect (cv::Point (0, 0), result.size ()), Scalar::all (0), n);
+    result.convertTo(result, CV_8U);
+
     return result;
+
+
+
 }
 
 Mat &Frame::getCornerConvolution (Mat &result)
 {
-    //  (-1, -1,  0,  1,  1,
-    //   -1, -1,  0,  1,  1,
-    //    0,  0,  0,  0,  0,
-    //    1,  1,  0, -1, -1,
-    //    1,  1,  0, -1, -1 )
+    //  (-1, -1,  0,  1,  1,   (1,
+    //   -1, -1,  0,  1,  1,    1,
+    //    0,  0,  0,  0,  0, =  0, * (-1, -1,  0,  1,  1)
+    //    1,  1,  0, -1, -1,   -1,
+    //    1,  1,  0, -1, -1 )  -1)
 
-    Mat_<uchar> result_ = result;
-    int n = 2;
-    for (int i = n; i < image.rows - n; i++)
+
+    Mat rowMult (result.rows, result.cols, CV_32S, Scalar::all (0));
+    Mat colMult (result.rows, result.cols, CV_32S, Scalar::all (0));
+
+
+    for (int i = 2; i < image.rows - 2; i++)
     {
-        for (int j = n; j < image.cols - n; j++)
-        {
-            result_[i][j] = saturation (-rectSum (j - n, i - n, n, n) + rectSum (j - n, i + 1, n, n) +
-                                        rectSum (j + 1, i - n, n, n) - rectSum (j + 1, i + 1, n, n));
-        }
+        add (image.row (i - 2), image.row (i - 1), rowMult.row (i));
+        subtract (rowMult.row (i), image.row (i + 1), rowMult.row (i));
+        subtract (rowMult.row (i), image.row (i + 2), rowMult.row (i));
     }
-    result = result_;
+
+    for (int i = 2; i < image.cols - 2; i++)
+    {
+        add (rowMult.col (i + 2), rowMult.col (i + 1), colMult.col (i));
+        subtract (colMult.col (i), rowMult.col (i - 1), colMult.col (i));
+        subtract (colMult.col (i), rowMult.col (i - 2), result.col (i));
+    }
+
     return result;
 }
 
-int Frame::compPartialMax (int from, int to, int *I, int *pmax)
-{
-    pmax[to] = I[to];
-    int best = to;
-    while (to > from)
-    {
-        to--;
-        if (I[best] >= I[to])
-        {
-            pmax[to] = I[best];
-        }
-        else
-        {
-            pmax[to] = I[to];
-            best = to;
-        }
-    }
-    return best;
-}
 
-
-// currently unused
-void Frame::suppression1D (int n, int *I, int size, vector<int> &maximum)
-{
-    int pmax[size];
-    int i = n;
-    compPartialMax (0, i - 1, I, pmax);
-    int chkpt = -1;
-    while (i < size - 2 * n)
-    {
-        cout << "hello" << endl;
-        int j = compPartialMax (i, i + n, I, pmax);
-        int k = compPartialMax (i + n + 1, j + n, I, pmax);
-        if (i == j || I[j] >= I[k])
-        {
-            if ((chkpt <= j - n || I[j] >= pmax[chkpt]) && (j - n == i || I[j] >= pmax[j - n]))
-            {
-                maximum.push_back (j);
-            }
-            if (i < j)
-            {
-                chkpt = i + n + 1;
-            }
-            i = j + n + 1;
-        }
-        else
-        {
-            i = k;
-            chkpt = j + n + 1;
-            while (i < size - n)
-            {
-                j = compPartialMax (chkpt, i + n, I, pmax);
-                if (I[i] >= I[j])
-                {
-                    maximum.push_back (i);
-                    i = i + n - 1;
-                    break;
-                }
-                else
-                {
-                    chkpt = i + n - 1;
-                    i = j;
-                }
-            }
-        }
-    }
-}
 
 bool cmp (uchar a, uchar b, int cmp)
 {
