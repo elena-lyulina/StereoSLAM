@@ -18,4 +18,5 @@ class FeaturePoint
     int clazz;
     int row;
     int col;
+    Frame frame;
 };
