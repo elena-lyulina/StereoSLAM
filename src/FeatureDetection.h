@@ -20,9 +20,9 @@ class FeatureDetection
                              vector<pair<FeaturePoint, FeaturePoint>> &matched,
                              int error);
 
-    static void doMatchingCircle(vector<FeaturePoint> leftPred,
-                                 vector<FeaturePoint> rightPred,
-                                 vector<FeaturePoint> rightSucc,
-                                 vector<FeaturePoint> leftSucc,
-                                 vector<tuple<FeaturePoint, FeaturePoint, FeaturePoint, FeaturePoint>> &matched);
+    static void doMatchingCircle (vector<FeaturePoint> leftPred,
+                                  vector<FeaturePoint> rightPred,
+                                  vector<FeaturePoint> rightSucc,
+                                  vector<FeaturePoint> leftSucc,
+                                  vector<tuple<FeaturePoint, FeaturePoint, FeaturePoint, FeaturePoint>> &matched);
 };

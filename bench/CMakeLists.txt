@@ -1,5 +1,5 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCMAKE_BUILD_TYPE=Release")
-set(BENCHMARKS bench_First)
+set(BENCHMARKS bench_FeatureMatching bench_Frame)
 set(SOURCE_FILES ../src/Frame.cpp ../src/FeatureDetection.cpp ../src/FeaturePoint.cpp)
 
 foreach(CUR_BENCH ${BENCHMARKS})

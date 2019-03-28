@@ -5,7 +5,7 @@
 #include "FeaturePoint.h"
 
 FeaturePoint::FeaturePoint (Frame frame, int row, int col)
-: descriptor (vector<int> ()), row (row), col (col), frame(frame)
+: descriptor (vector<int> ()), row (row), col (col), frame (frame)
 {
 
     //    .  .  .  .  #  .  #  .  .  .  .

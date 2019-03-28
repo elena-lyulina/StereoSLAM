@@ -8,8 +8,8 @@ using namespace cv;
 
 
 Frame::Frame (Mat &img)
-    : image (img), integralImage (Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
-      xSobel (Mat::zeros (image.rows, image.cols, CV_8U)), ySobel (Mat::zeros (image.rows, image.cols, CV_8U))
+: image (img), integralImage (Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
+  xSobel (Mat::zeros (image.rows, image.cols, CV_8U)), ySobel (Mat::zeros (image.rows, image.cols, CV_8U))
 {
     fillSum ();
     getXSobelConvolution (image, xSobel);
@@ -37,25 +37,23 @@ void Frame::fillSum ()
 int Frame::rectSum (int x, int y, int width, int height)
 {
     return integralImage.at<uint> (y + height, x + width) - integralImage.at<uint> (y + height, x) -
-        integralImage.at<uint> (y, x + width) + integralImage.at<uint> (y, x);
+           integralImage.at<uint> (y, x + width) + integralImage.at<uint> (y, x);
 }
 
 
-
-
-
-Mat &Frame::rectSumMat(int sideLength, Mat &result) {
+Mat &Frame::rectSumMat (int sideLength, Mat &result)
+{
 
     int width = integralImage.cols - sideLength;
     int height = integralImage.rows - sideLength;
     int n = sideLength / 2;
 
-    result = integralImage(Rect(sideLength, sideLength, width, height))
-        - integralImage(Rect(0, sideLength, width, height))
-        + integralImage(Rect(0, 0, width, height))
-        - integralImage(Rect(sideLength, 0, width, height));
+    result = integralImage (Rect (sideLength, sideLength, width, height)) -
+             integralImage (Rect (0, sideLength, width, height)) +
+             integralImage (Rect (0, 0, width, height)) -
+             integralImage (Rect (sideLength, 0, width, height));
 
-    copyMakeBorder(result, result, n, n, n, n, BORDER_CONSTANT);
+    copyMakeBorder (result, result, n, n, n, n, BORDER_CONSTANT);
 
 
     return result;
@@ -72,16 +70,12 @@ Mat &Frame::getBlobConvolution (Mat &result)
     int n = 2;
 
     Mat temp, temp1, temp2;
-    image.convertTo(temp2, CV_32S);
-    result = 2 * rectSumMat(n + 1, temp) - rectSumMat(2 * n + 1, temp1) + 7 * temp2;
-    cv::rectangle (result,
-                   cv::Rect (cv::Point (0, 0), result.size ()), Scalar::all (0), n);
-    result.convertTo(result, CV_8U);
+    image.convertTo (temp2, CV_32S);
+    result = 2 * rectSumMat (n + 1, temp) - rectSumMat (2 * n + 1, temp1) + 7 * temp2;
+    cv::rectangle (result, cv::Rect (cv::Point (0, 0), result.size ()), Scalar::all (0), n);
+    result.convertTo (result, CV_8U);
 
     return result;
-
-
-
 }
 
 Mat &Frame::getCornerConvolution (Mat &result)
@@ -113,7 +107,6 @@ Mat &Frame::getCornerConvolution (Mat &result)
 
     return result;
 }
-
 
 
 bool cmp (uchar a, uchar b, int cmp)
@@ -186,79 +179,95 @@ Mat &Frame::getYSobelConvolution (Mat image, Mat &result)
 
 
 template <typename Comparator>
-void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, Comparator comp) {
-    for (int i = n; i < image.rows - n; i += n + 1) {
-        for (int j = n; j < image.cols - n; j += n + 1) {
+void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, Comparator comp)
+{
+    for (int i = n; i < image.rows - n; i += n + 1)
+    {
+        for (int j = n; j < image.cols - n; j += n + 1)
+        {
 
             int mi = i;
             int mj = j;
             bool equalFound = false;
 
-            for (int i2 = i; i2 <= i + n; i2++) {
-                for (int j2 = j; j2 <= j + n; j2++) {
+            for (int i2 = i; i2 <= i + n; i2++)
+            {
+                for (int j2 = j; j2 <= j + n; j2++)
+                {
 
-                    if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj))) {
+                    if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)))
+                    {
 
                         equalFound = false;
                         mi = i2;
                         mj = j2;
                     }
-                    else if (image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj) && (i2 != mi || j2 != mj)) {
+                    else if (image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj) && (i2 != mi || j2 != mj))
+                    {
 
                         equalFound = true;
                     }
                 }
             }
 
-            if (!equalFound && (mi < image.rows - n) && (mj < image.cols - n)) {
+            if (!equalFound && (mi < image.rows - n) && (mj < image.cols - n))
+            {
 
                 bool geNotFound = true;
 
-                for (int i2 = mi - n; geNotFound && i2 <= mi + n && i2 < image.rows; i2++) {
-                    for (int j2 = mj - n; geNotFound && j2 < j && j2 < image.cols; j2++) {
+                for (int i2 = mi - n; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
+                {
+                    for (int j2 = mj - n; geNotFound && j2 < j && j2 < image.cols; j2++)
+                    {
 
-                        if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj)) || image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj)) {
+                        if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
+                            image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+                        {
                             geNotFound = false;
                         }
                     }
-                    for (int j2 = j + n + 1; geNotFound && j2 <= mj + n && j2 < image.cols; j2++) {
+                    for (int j2 = j + n + 1; geNotFound && j2 <= mj + n && j2 < image.cols; j2++)
+                    {
 
-                        if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj)) || image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj)) {
-                            geNotFound = false;
-                        }
-                    }
-                }
-
-                for (int j2 = j; geNotFound && j2 <= j + n && j2 < image.cols; j2++) {
-                    for (int i2 = mi - n; geNotFound && i2 < i && i2 < image.rows; i2++) {
-
-                        if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj)) || image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj)) {
-                            geNotFound = false;
-                        }
-                    }
-
-                    for (int i2 = i + n + 1; geNotFound && i2 <= mi + n && i2 < image.rows; i2++) {
-
-                        if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj)) || image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj)) {
+                        if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
+                            image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+                        {
                             geNotFound = false;
                         }
                     }
                 }
 
-                if (geNotFound) {
-                    result.emplace_back(pair<int, int>(mi, mj));
+                for (int j2 = j; geNotFound && j2 <= j + n && j2 < image.cols; j2++)
+                {
+                    for (int i2 = mi - n; geNotFound && i2 < i && i2 < image.rows; i2++)
+                    {
+
+                        if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
+                            image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+                        {
+                            geNotFound = false;
+                        }
+                    }
+
+                    for (int i2 = i + n + 1; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
+                    {
+
+                        if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
+                            image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+                        {
+                            geNotFound = false;
+                        }
+                    }
                 }
 
+                if (geNotFound)
+                {
+                    result.emplace_back (pair<int, int> (mi, mj));
+                }
             }
         }
     }
-
 }
 
 template void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, greater<int>);
 template void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, less<int>);
-
-
-
-
-
