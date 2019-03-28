@@ -122,81 +122,6 @@ bool cmp (uchar a, uchar b, int cmp)
 }
 
 
-void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, int comp)
-{
-    for (int i = n; i <= image.rows - n; i += n + 1)
-    {
-        for (int j = n; j <= image.cols - n; j += n + 1)
-        {
-            int mi = i;
-            int mj = j;
-            for (int i2 = i; i2 <= i + n; i2++)
-            {
-                for (int j2 = j; j2 <= j + n; j2++)
-                {
-                    if (cmp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj), comp))
-                    {
-                        mi = i2;
-                        mj = j2;
-                    }
-                }
-            }
-            int flag = 0;
-
-
-            for (int i2 = mi - n; i2 <= mi + n && i2 < image.rows; i2++)
-            {
-                for (int j2 = mj - n; j2 <= j && j2 < image.cols; j2++)
-                {
-                    if (cmp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj), comp))
-                    {
-                        flag = 1;
-                        break;
-                    }
-                }
-                if (flag == 1) break;
-                for (int j2 = j + n; j2 <= mj + n && j2 < image.cols; j2++)
-                {
-                    if (cmp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj), comp))
-                    {
-                        flag = 1;
-                        break;
-                    }
-                }
-                if (flag == 1) break;
-            }
-            if (flag == 0)
-            {
-                for (int j2 = j; j2 <= j + n && j2 < image.cols; j2++)
-                {
-                    for (int i2 = mi - n; i2 <= i && i2 < image.rows; i2++)
-                    {
-                        if (cmp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj), comp))
-                        {
-                            flag = 1;
-                            break;
-                        }
-                    }
-                    if (flag == 1) break;
-                    for (int i2 = i + n; i2 <= mi + n && i2 < image.rows; i2++)
-                    {
-                        if (cmp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj), comp))
-                        {
-                            flag = 1;
-                            break;
-                        }
-                    }
-                    if (flag == 1) break;
-                }
-            }
-            if (flag == 0)
-            {
-                result.emplace_back (pair<int, int> (mi, mj));
-            }
-        }
-    }
-}
-
 Mat &Frame::getIntegralImage ()
 {
     return integralImage;
@@ -258,3 +183,82 @@ Mat &Frame::getYSobelConvolution (Mat image, Mat &result)
 
     return result;
 }
+
+
+template <typename Comparator>
+void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, Comparator comp) {
+    for (int i = n; i < image.rows - n; i += n + 1) {
+        for (int j = n; j < image.cols - n; j += n + 1) {
+
+            int mi = i;
+            int mj = j;
+            bool equalFound = false;
+
+            for (int i2 = i; i2 <= i + n; i2++) {
+                for (int j2 = j; j2 <= j + n; j2++) {
+
+                    if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj))) {
+
+                        equalFound = false;
+                        mi = i2;
+                        mj = j2;
+                    }
+                    else if (image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj) && (i2 != mi || j2 != mj)) {
+
+                        equalFound = true;
+                    }
+                }
+            }
+
+            if (!equalFound && (mi < image.rows - n) && (mj < image.cols - n)) {
+
+                bool geNotFound = true;
+
+                for (int i2 = mi - n; geNotFound && i2 <= mi + n && i2 < image.rows; i2++) {
+                    for (int j2 = mj - n; geNotFound && j2 < j && j2 < image.cols; j2++) {
+
+                        if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj)) || image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj)) {
+                            geNotFound = false;
+                        }
+                    }
+                    for (int j2 = j + n + 1; geNotFound && j2 <= mj + n && j2 < image.cols; j2++) {
+
+                        if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj)) || image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj)) {
+                            geNotFound = false;
+                        }
+                    }
+                }
+
+                for (int j2 = j; geNotFound && j2 <= j + n && j2 < image.cols; j2++) {
+                    for (int i2 = mi - n; geNotFound && i2 < i && i2 < image.rows; i2++) {
+
+                        if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj)) || image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj)) {
+                            geNotFound = false;
+                        }
+                    }
+
+                    for (int i2 = i + n + 1; geNotFound && i2 <= mi + n && i2 < image.rows; i2++) {
+
+                        if (comp(image.at<uchar>(i2, j2), image.at<uchar>(mi, mj)) || image.at<uchar>(i2, j2) == image.at<uchar>(mi, mj)) {
+                            geNotFound = false;
+                        }
+                    }
+                }
+
+                if (geNotFound) {
+                    result.emplace_back(pair<int, int>(mi, mj));
+                }
+
+            }
+        }
+    }
+
+}
+
+template void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, greater<int>);
+template void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, less<int>);
+
+
+
+
+

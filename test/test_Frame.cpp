@@ -6,7 +6,7 @@
 TEST (Frame, fillSumTest)
 {
   Mat image = (Mat_<uchar> (5, 5) <<
-      0, 1, 2, 3, 4,
+                                  0, 1, 2, 3, 4,
       1, 5, 6, 7, 8,
       2, 6, 9, 10, 11,
       3, 7, 10, 12, 13,
@@ -16,7 +16,7 @@ TEST (Frame, fillSumTest)
 
   const Mat expectedIntegralImage =
       (Mat_<int> (6, 6) <<
-          0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0,
           0, 0, 1, 3, 6, 10,
           0, 1, 7, 15, 25, 37,
           0, 3, 15, 32, 52, 75,
@@ -95,25 +95,66 @@ TEST (Frame, getConvolutionTest)
 
 TEST (Frame, suppression2DTest)
 {
-  int minSize = 25;
-  int maxSize = 25;
-  int times = 1;
+  int minSize = 50;
+  int maxSize = 1000;
+  int times = 100;
   int rows, cols;
+  int maxK = minSize;
+  int minK = 1;
+  int k;
 
-  for (int i = 0; i < times; i++) {
+  for (int l = 0; l < times; l++) {
 
     rows = rand() % (maxSize - minSize + 1) + minSize;
     cols = rand() % (maxSize - minSize + 1) + minSize;
+    k = rand() % (maxK - minK + 1) + minK;
     Mat image(rows, cols, CV_8UC1);
-    randu(image, Scalar(0), Scalar(255));
-    Frame frame(image);
-    Mat result_blob(rows, cols, CV_32SC1, Scalar::all(0));
-    frame.getBlobConvolution(result_blob);
+    randu(image, Scalar(0), Scalar(10));
+
     vector<pair<int, int>> max;
 
-    Mat white(rows, cols, CV_8UC1, Scalar(255, 255, 255));
-    //   cout << endl << white << endl << endl;
-    frame.suppression2D(2, white, max, 1);
+
+    Frame::suppression2D(k, image, max, greater<int>());
+
+    vector<pair<int, int>> expected_max;
+    bool flag;
+    for (int i = k; i < image.rows - k; i++) {
+      for (int j = k; j < image.cols - k; j++) {
+        flag = true;
+
+        for (int ik = i - k; flag && ik <= i + k; ik++) {
+          for (int jk = j - k; flag && jk <= j + k; jk++) {
+
+            if (image.at<uchar>(i, j) < image.at<uchar>(ik, jk)) {
+              flag = false;
+            }
+
+            else if (image.at<uchar>(i, j) == image.at<uchar>(ik, jk) && (i != ik || j != jk)) {
+              flag = false;
+            }
+          }
+        }
+
+        if (flag) {
+          expected_max.emplace_back(make_pair(i, j));
+        }
+      }
+    }
+
+    sort(max.begin(), max.end());
+
+    if (expected_max != max) {
+      cout << endl << image << endl;
+
+      for (int i = 0; i < min(expected_max.size(), max.size()); i++) {
+        cout << expected_max[i].first << " " << expected_max[i].second << "; " << max[i].first << " " << max[i].second << endl;
+      }
+    }
+
+    ASSERT_TRUE(expected_max == max);
+
+
+
 
 
   }
@@ -192,6 +233,10 @@ TEST (Frame, getYSobelConvolutionTest) {
 
   }
 }
+
+
+
+
 
 
 int main (int argc, char **argv)
