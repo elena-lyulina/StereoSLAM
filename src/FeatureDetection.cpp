@@ -30,8 +30,15 @@ void FeatureDetection::findMatches (vector<FeaturePoint> candidates1,
     }
 }
 
-int SADofDescriptors (FeaturePoint fp1, FeaturePoint fp2)
+int SADofDescriptors (const FeaturePoint &fp1, const FeaturePoint &fp2)
 {
+#if 1
+  const int N = fp1.descriptor.size();
+  int sad = 0;
+  for (int i = 0; i < N; ++i)
+    sad += std::abs(fp1.descriptor[i] - fp2.descriptor[i]);
+  return sad;
+#else
     vector<int> SAD (fp1.descriptor.size ());
     int (*absolute) (int) = &abs;
 
@@ -40,14 +47,15 @@ int SADofDescriptors (FeaturePoint fp1, FeaturePoint fp2)
 
     transform (SAD.begin (), SAD.end (), SAD.begin (), absolute);
     return accumulate (SAD.begin (), SAD.end (), 0);
+#endif
 }
 
 
-FeaturePoint findMatchesOnArea (FeaturePoint p, vector<FeaturePoint> candidates, int areaSize)
+const FeaturePoint* findMatchesOnArea (const FeaturePoint &p, const vector<FeaturePoint> &candidates, int areaSize)
 {
     int minError = SADofDescriptors (p, candidates[0]);
-    FeaturePoint matchedPoint = candidates[0];
-    for (auto rsPoint : candidates)
+    const FeaturePoint *matchedPoint = &candidates[0];
+    for (auto &rsPoint : candidates)
     {
         if (abs (rsPoint.col - p.col) <= areaSize && abs (rsPoint.row - p.row) <= areaSize)
         {
@@ -57,7 +65,7 @@ FeaturePoint findMatchesOnArea (FeaturePoint p, vector<FeaturePoint> candidates,
             if (error < minError)
             {
                 minError = error;
-                matchedPoint = rsPoint;
+                matchedPoint = &rsPoint;
             }
         }
     }
@@ -66,12 +74,12 @@ FeaturePoint findMatchesOnArea (FeaturePoint p, vector<FeaturePoint> candidates,
 }
 
 template <typename Comparator>
-FeaturePoint findMatchesOnStrip (FeaturePoint p, vector<FeaturePoint> candidates, int stripWidth, Comparator comp)
+const FeaturePoint *findMatchesOnStrip (const FeaturePoint &p, const vector<FeaturePoint> &candidates, int stripWidth, Comparator comp)
 {
     int minError = SADofDescriptors (p, candidates[0]);
-    FeaturePoint matchedPoint = candidates[0];
+    const FeaturePoint* matchedPoint = &candidates[0];
 
-    for (auto rsPoint : candidates)
+    for (auto &rsPoint : candidates)
     {
         if (comp (rsPoint.col, p.col) && abs (rsPoint.row - p.row) <= stripWidth)
         {
@@ -81,7 +89,7 @@ FeaturePoint findMatchesOnStrip (FeaturePoint p, vector<FeaturePoint> candidates
             if (error < minError)
             {
                 minError = error;
-                matchedPoint = rsPoint;
+                matchedPoint = &rsPoint;
             }
         }
     }
@@ -90,33 +98,34 @@ FeaturePoint findMatchesOnStrip (FeaturePoint p, vector<FeaturePoint> candidates
 }
 
 
-void FeatureDetection::doMatchingCircle (vector<FeaturePoint> leftPred,
-                                         vector<FeaturePoint> rightPred,
-                                         vector<FeaturePoint> rightSucc,
-                                         vector<FeaturePoint> leftSucc,
-                                         vector<tuple<FeaturePoint, FeaturePoint, FeaturePoint, FeaturePoint>> &matched)
+void FeatureDetection::doMatchingCircle (const vector<FeaturePoint> &leftPred,
+                                         const vector<FeaturePoint> &rightPred,
+                                         const vector<FeaturePoint> &rightSucc,
+                                         const vector<FeaturePoint> &leftSucc,
+                                         vector<tuple<const FeaturePoint*, const FeaturePoint*, const FeaturePoint*, const FeaturePoint*>> &matched)
 {
 
     int stripWidth = 10;
     int areaWidth = 50;
 
-    for (auto lpPoint : leftPred)
+    for (auto &lpPoint : leftPred)
     {
 
+      // возвращать указатель или id
         // checking strip on right pred image, it should be to the right of lpPoint
-        FeaturePoint rpMatchedPoint = findMatchesOnStrip (lpPoint, rightPred, stripWidth, std::less<int> ());
+        const FeaturePoint* rpMatchedPoint = findMatchesOnStrip (lpPoint, rightPred, stripWidth, std::less<int> ());
 
         // checking area on right succ image
-        FeaturePoint rsMatchedPoint = findMatchesOnArea (rpMatchedPoint, rightSucc, areaWidth);
+        const FeaturePoint* rsMatchedPoint = findMatchesOnArea (*rpMatchedPoint, rightSucc, areaWidth);
 
         // checking strip on left succ image, it should be to the left of rsMatchedPoint
-        FeaturePoint lsMatchedPoint =
-        findMatchesOnStrip (rsMatchedPoint, leftSucc, stripWidth, std::greater<int> ());
+        const FeaturePoint* lsMatchedPoint =
+        findMatchesOnStrip (*rsMatchedPoint, leftSucc, stripWidth, std::greater<int> ());
 
         // checking are on left pred image
-        FeaturePoint lpMatchedPoint = findMatchesOnArea (lsMatchedPoint, leftPred, areaWidth);
+        const FeaturePoint* lpMatchedPoint = findMatchesOnArea (*lsMatchedPoint, leftPred, areaWidth);
 
-        if (lpPoint.uniqueIdentifier == lpMatchedPoint.uniqueIdentifier)
+        if (&lpPoint == lpMatchedPoint)
         {
             matched.emplace_back (lpMatchedPoint, rpMatchedPoint, rsMatchedPoint, lsMatchedPoint);
         }
