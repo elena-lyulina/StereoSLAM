@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
     vector<vector<FeaturePoint>> cornerMaxPoints;
     vector<vector<FeaturePoint>> cornerMinPoints;
 
-    int n = 10;
+    int n = 5;
     for (int i = 0; i < filenames.size (); i++)
     {
         images.emplace_back (imread (filenames[i], CV_LOAD_IMAGE_GRAYSCALE));
@@ -94,10 +94,10 @@ int main (int argc, char *argv[])
     }
 
 
-    vector<tuple<FeaturePoint, FeaturePoint, FeaturePoint, FeaturePoint>> matchesBMax;
-    vector<tuple<FeaturePoint, FeaturePoint, FeaturePoint, FeaturePoint>> matchesBMin;
-    vector<tuple<FeaturePoint, FeaturePoint, FeaturePoint, FeaturePoint>> matchesCMax;
-    vector<tuple<FeaturePoint, FeaturePoint, FeaturePoint, FeaturePoint>> matchesCMin;
+    vector<tuple<const FeaturePoint*, const FeaturePoint*, const FeaturePoint*, const FeaturePoint*>> matchesBMax;
+    vector<tuple<const FeaturePoint*, const FeaturePoint*, const FeaturePoint*, const FeaturePoint*>> matchesBMin;
+    vector<tuple<const FeaturePoint*, const FeaturePoint*, const FeaturePoint*, const FeaturePoint*>> matchesCMax;
+    vector<tuple<const FeaturePoint*, const FeaturePoint*, const FeaturePoint*, const FeaturePoint*>> matchesCMin;
 
     int error = 100;
 
@@ -126,31 +126,38 @@ int main (int argc, char *argv[])
     // Scalar color = Scalar(0, 255, 0);
     for (auto m : matchesBMax)
     {
-        circle (imagesRGB[0], Point (get<0> (m).col, get<0> (m).row), 3, color, -1);
-        circle (imagesRGB[1], Point (get<1> (m).col, get<1> (m).row), 3, color, -1);
-        circle (imagesRGB[2], Point (get<2> (m).col, get<2> (m).row), 3, color, -1);
-        circle (imagesRGB[3], Point (get<3> (m).col, get<3> (m).row), 3, color, -1);
+        circle (imagesRGB[0], Point (get<0> (m)->col, get<0> (m)->row), 3, color, -1);
+        circle (imagesRGB[1], Point (get<1> (m)->col, get<1> (m)->row), 3, color, -1);
+        circle (imagesRGB[2], Point (get<2> (m)->col, get<2> (m)->row), 3, color, -1);
+        circle (imagesRGB[3], Point (get<3> (m)->col, get<3> (m)->row), 3, color, -1);
 
         color = Scalar (rng.uniform (10, 255), rng.uniform (10, 255), rng.uniform (10, 255));
     }
-    //    color = Scalar(255, 0, 0);
-    //    for (auto m : matchesBMin) {
-    //        circle (imagesRGB[0], Point (m.first.col, m.first.row), 3, color, -1);
-    //        circle (imagesRGB[1], Point (m.second.col, m.second.row), 3, color, -1);
-    //        color = Scalar(rng.uniform(10 ,255), rng.uniform(10, 255), rng.uniform(10, 255));
-    //    }
-    //    color = Scalar(0, 0, 255);
-    //    for (auto m : matchesCMax) {
-    //        circle (imagesRGB[0], Point (m.first.col, m.first.row), 3, color, -1);
-    //        circle (imagesRGB[1], Point (m.second.col, m.second.row), 3, color, -1);
-    //        color = Scalar(rng.uniform(10 ,255), rng.uniform(10, 255), rng.uniform(10, 255));
-    //    }
-    //    color = Scalar(0, 255, 255);
-    //    for (auto m : matchesCMin) {
-    //        circle (imagesRGB[0], Point (m.first.col, m.first.row), 3, color, -1);
-    //        circle (imagesRGB[1], Point (m.second.col, m.second.row), 3, color, -1);
-    //        color = Scalar(rng.uniform(10 ,255), rng.uniform(10, 255), rng.uniform(10, 255));
-    //    }
+
+    for (auto m : matchesBMin) {
+        circle (imagesRGB[0], Point (get<0> (m)->col, get<0> (m)->row), 3, color, -1);
+        circle (imagesRGB[1], Point (get<1> (m)->col, get<1> (m)->row), 3, color, -1);
+        circle (imagesRGB[2], Point (get<2> (m)->col, get<2> (m)->row), 3, color, -1);
+        circle (imagesRGB[3], Point (get<3> (m)->col, get<3> (m)->row), 3, color, -1);
+
+        color = Scalar(rng.uniform(10 ,255), rng.uniform(10, 255), rng.uniform(10, 255));
+    }
+    for (auto m : matchesCMax) {
+        circle (imagesRGB[0], Point (get<0> (m)->col, get<0> (m)->row), 3, color, -1);
+        circle (imagesRGB[1], Point (get<1> (m)->col, get<1> (m)->row), 3, color, -1);
+        circle (imagesRGB[2], Point (get<2> (m)->col, get<2> (m)->row), 3, color, -1);
+        circle (imagesRGB[3], Point (get<3> (m)->col, get<3> (m)->row), 3, color, -1);
+
+        color = Scalar(rng.uniform(10 ,255), rng.uniform(10, 255), rng.uniform(10, 255));
+    }
+    for (auto m : matchesCMin) {
+        circle (imagesRGB[0], Point (get<0> (m)->col, get<0> (m)->row), 3, color, -1);
+        circle (imagesRGB[1], Point (get<1> (m)->col, get<1> (m)->row), 3, color, -1);
+        circle (imagesRGB[2], Point (get<2> (m)->col, get<2> (m)->row), 3, color, -1);
+        circle (imagesRGB[3], Point (get<3> (m)->col, get<3> (m)->row), 3, color, -1);
+
+        color = Scalar(rng.uniform(10 ,255), rng.uniform(10, 255), rng.uniform(10, 255));
+    }
 
 
     for (int i = 0; i < filenames.size (); i++)
