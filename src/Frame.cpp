@@ -90,7 +90,21 @@ Mat &Frame::getCornerConvolution (Mat &result)
     Mat rowMult (result.rows, result.cols, CV_32S, Scalar::all (0));
     Mat colMult (result.rows, result.cols, CV_32S, Scalar::all (0));
 
+    const int w = image.cols, h = image.rows;
+    rowMult(Rect(0, 2, w, h - 4))
+      = image(Rect(0, 0, image.cols, image.rows - 4))
+  +image(Rect(0, 1, image.cols, image.rows - 4))
+  -image(Rect(0, 3, image.cols, image.rows - 4))
+  -image(Rect(0, 4, image.cols, image.rows - 4));
 
+    colMult(Rect(2,2,image.cols-4, image.rows -4))
+    =
+        -rowMult(Rect(0, 2, image.cols-4, image.rows - 4))
+            -rowMult(Rect(1, 2, image.cols-4, image.rows - 4))
+            +rowMult(Rect(3, 2, image.cols-4, image.rows - 4))
+            +rowMult(Rect(4, 2, image.cols-4, image.rows - 4));
+    colMult.convertTo(result, CV_8U);
+#if 0
     for (int i = 2; i < image.rows - 2; i++)
     {
         add (image.row (i - 2), image.row (i - 1), rowMult.row (i));
@@ -104,7 +118,7 @@ Mat &Frame::getCornerConvolution (Mat &result)
         subtract (colMult.col (i), rowMult.col (i - 1), colMult.col (i));
         subtract (colMult.col (i), rowMult.col (i - 2), result.col (i));
     }
-
+#endif
     return result;
 }
 

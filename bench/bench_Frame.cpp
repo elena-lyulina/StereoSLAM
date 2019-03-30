@@ -2,6 +2,7 @@
 #include <benchmark/benchmark.h>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
+#include <memory>
 
 
 class SuppressionFixture : public benchmark::Fixture
@@ -47,10 +48,13 @@ class ConvolutionFixture : public benchmark::Fixture
         const char *filename = "/home/elena/workspaces/c++/StereoSLAM/res/lp.png";
         image = imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
         result = Mat (image.rows, image.cols, CV_8UC3, Scalar::all (0));
+        frame = std::make_unique<Frame>(image);
     }
     Mat image;
     Mat result;
 
+
+    std::unique_ptr<Frame> frame;
 
     void TearDown (const ::benchmark::State &state)
     {
