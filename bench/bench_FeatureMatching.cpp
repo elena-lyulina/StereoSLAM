@@ -36,10 +36,10 @@ static void BM_FeatureMatching (benchmark::State &state)
         vector<FeaturePoint> blobMaxPoints;
         for (auto p : blobMaxCoord)
         {
-            blobMaxPoints.emplace_back (FeaturePoint (frame, p.first, p.second));
+            blobMaxPoints.emplace_back (frame, p.first, p.second);
         }
 
-        vector<tuple<FeaturePoint, FeaturePoint, FeaturePoint, FeaturePoint>> matchesBMax;
+        vector<tuple<const FeaturePoint*, const FeaturePoint*, const FeaturePoint*, const FeaturePoint*>> matchesBMax;
 
 
         FeatureDetection::doMatchingCircle (blobMaxPoints, blobMaxPoints, blobMaxPoints, blobMaxPoints, matchesBMax);
