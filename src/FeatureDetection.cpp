@@ -8,7 +8,7 @@ void FeatureDetection::findMatches (vector<FeaturePoint> candidates1,
                                     vector<pair<FeaturePoint, FeaturePoint>> &matched,
                                     int error)
 {
-    vector<int> SAD (candidates1[0].descriptor.size ());
+    vector<int> SAD (candidates1[0].matchingDescriptor.size ());
     int (*absolute) (int) = &abs;
     int r;
     for (auto fp1 : candidates1)
@@ -16,7 +16,7 @@ void FeatureDetection::findMatches (vector<FeaturePoint> candidates1,
         for (auto fp2 : candidates2)
         {
 
-            transform (fp1.descriptor.begin (), fp1.descriptor.end (), fp2.descriptor.begin (),
+            transform (fp1.matchingDescriptor.begin (), fp1.matchingDescriptor.end (), fp2.matchingDescriptor.begin (),
                        SAD.begin (), std::minus<int> ());
 
             transform (SAD.begin (), SAD.end (), SAD.begin (), absolute);
@@ -33,16 +33,16 @@ void FeatureDetection::findMatches (vector<FeaturePoint> candidates1,
 int SADofDescriptors (const FeaturePoint &fp1, const FeaturePoint &fp2)
 {
 #if 1
-  const int N = fp1.descriptor.size();
+  const int N = fp1.matchingDescriptor.size();
   int sad = 0;
   for (int i = 0; i < N; ++i)
-    sad += std::abs(fp1.descriptor[i] - fp2.descriptor[i]);
+    sad += std::abs(fp1.matchingDescriptor[i] - fp2.matchingDescriptor[i]);
   return sad;
 #else
-    vector<int> SAD (fp1.descriptor.size ());
+    vector<int> SAD (fp1.matchingDescriptor.size ());
     int (*absolute) (int) = &abs;
 
-    transform (fp1.descriptor.begin (), fp1.descriptor.end (), fp2.descriptor.begin (),
+    transform (fp1.matchingDescriptor.begin (), fp1.matchingDescriptor.end (), fp2.matchingDescriptor.begin (),
                SAD.begin (), std::minus<int> ());
 
     transform (SAD.begin (), SAD.end (), SAD.begin (), absolute);

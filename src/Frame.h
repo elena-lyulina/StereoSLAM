@@ -1,9 +1,7 @@
+#pragma once
+
 #include <iostream>
 #include <opencv2/imgproc.hpp>
-#ifndef STEREOSLAM_FRAME_H
-#define STEREOSLAM_FRAME_H
-
-#pragma once
 
 using namespace std;
 using namespace cv;
@@ -48,4 +46,3 @@ class Frame
     Mat &rectSumMat (int sideLength, Mat &result);
 };
 
-#endif // STEREOSLAM_FRAME_H

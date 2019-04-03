@@ -1,7 +1,7 @@
 #include "Frame.h"
 #include <iostream>
 #include <opencv2/imgproc.hpp>
-#include <vector> //for std::vector
+#include <vector>
 
 using namespace std;
 using namespace cv;

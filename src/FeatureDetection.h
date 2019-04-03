@@ -1,16 +1,8 @@
-//
-// Created by elena on 20.03.19.
-//
+#pragma once
 
 #include "FeaturePoint.h"
 #include "Frame.h"
 
-#pragma once
-
-#ifndef STEREOSLAM_FEATUREDETECTION_H
-#define STEREOSLAM_FEATUREDETECTION_H
-
-#endif // STEREOSLAM_FEATUREDETECTION_H
 
 class FeatureDetection
 {
