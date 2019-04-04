@@ -15,7 +15,7 @@ class SuppressionFixture : public benchmark::Fixture
         Mat result = Mat (image.rows, image.cols, CV_8UC3, Scalar::all (0));
         Frame frame = Frame (image);
 
-        mat = frame.getBlobConvolution (result);
+        mat = frame.doBlobConvolution(result);
         suppressed = vector<pair<int, int>> ();
     }
     int loc = 20;
@@ -67,7 +67,7 @@ BENCHMARK_DEFINE_F (ConvolutionFixture, BM_BlobConvolution) (benchmark::State &s
     for (auto _ : state)
     {
         Frame frame = Frame (image);
-        frame.getBlobConvolution (result);
+      frame.doBlobConvolution(result);
     }
 }
 

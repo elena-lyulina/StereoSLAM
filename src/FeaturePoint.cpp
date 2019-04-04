@@ -27,61 +27,70 @@ FeaturePoint::FeaturePoint (Frame &frame, int row, int col)
     //    #  #  #  #  #
     //    .  .  #  .  .
 
-    Mat sobels[2] = { frame.getXSobelConvolution (), frame.getYSobelConvolution () };
-    int i = 1;
-    for (auto s : sobels)
+
+    
+    frame.getXSobelConvolution ().at<uchar> (row - 5, col - 1);
+    
+    const int size = 2;
+    Mat sobels[size] = { frame.getXSobelConvolution (), frame.getYSobelConvolution () };
+    matchingDescriptor[0 + 0] = (sobels[0].at<uchar> (row - 5, col - 1));
+    int j = 0;
+    int k = 0;
+    for (int i = 0; i < size; i++)
     {
-        matchingDescriptor[i * 0] = (s.at<uchar> (row - 5, col - 1));
-        matchingDescriptor[i * 1] = (s.at<uchar> (row - 5, col + 1));
+        matchingDescriptor[j + 0] = (sobels[i].at<uchar> (row - 5, col - 1));
+        matchingDescriptor[j + 1] = (sobels[i].at<uchar> (row - 5, col + 1));
 
-        matchingDescriptor[i * 2] = (s.at<uchar> (row - 3, col - 5));
-        matchingDescriptor[i * 3] = (s.at<uchar> (row - 3, col - 3));
-        matchingDescriptor[i * 4] = (s.at<uchar> (row - 3, col - 1));
-        matchingDescriptor[i * 5] = (s.at<uchar> (row - 3, col + 1));
-        matchingDescriptor[i * 6] = (s.at<uchar> (row - 3, col + 3));
-        matchingDescriptor[i * 7] = (s.at<uchar> (row - 3, col + 5));
+        matchingDescriptor[j + 2] = (sobels[i].at<uchar> (row - 3, col - 5));
+        matchingDescriptor[j + 3] = (sobels[i].at<uchar> (row - 3, col - 3));
+        matchingDescriptor[j + 4] = (sobels[i].at<uchar> (row - 3, col - 1));
+        matchingDescriptor[j + 5] = (sobels[i].at<uchar> (row - 3, col + 1));
+        matchingDescriptor[j + 6] = (sobels[i].at<uchar> (row - 3, col + 3));
+        matchingDescriptor[j + 7] = (sobels[i].at<uchar> (row - 3, col + 5));
 
-        matchingDescriptor[i * 8] = (s.at<uchar> (row - 1, col - 3));
-        matchingDescriptor[i * 9] = (s.at<uchar> (row - 1, col - 1));
-        matchingDescriptor[i * 10] = (s.at<uchar> (row - 1, col + 1));
-        matchingDescriptor[i * 11] = (s.at<uchar> (row - 1, col + 3));
+        matchingDescriptor[j + 8] = (sobels[i].at<uchar> (row - 1, col - 3));
+        matchingDescriptor[j + 9] = (sobels[i].at<uchar> (row - 1, col - 1));
+        matchingDescriptor[j + 10] = (sobels[i].at<uchar> (row - 1, col + 1));
+        matchingDescriptor[j + 11] = (sobels[i].at<uchar> (row - 1, col + 3));
 
-        matchingDescriptor[i * 12] = (s.at<uchar> (row + 1, col - 3));
-        matchingDescriptor[i * 13] = (s.at<uchar> (row + 1, col - 1));
-        matchingDescriptor[i * 14] = (s.at<uchar> (row + 1, col + 1));
-        matchingDescriptor[i * 15] = (s.at<uchar> (row + 1, col + 3));
+        matchingDescriptor[j + 12] = (sobels[i].at<uchar> (row + 1, col - 3));
+        matchingDescriptor[j + 13] = (sobels[i].at<uchar> (row + 1, col - 1));
+        matchingDescriptor[j + 14] = (sobels[i].at<uchar> (row + 1, col + 1));
+        matchingDescriptor[j + 15] = (sobels[i].at<uchar> (row + 1, col + 3));
 
-        matchingDescriptor[i * 16] = (s.at<uchar> (row + 3, col - 5));
-        matchingDescriptor[i * 17] = (s.at<uchar> (row + 3, col - 3));
-        matchingDescriptor[i * 18] = (s.at<uchar> (row + 3, col - 1));
-        matchingDescriptor[i * 19] = (s.at<uchar> (row + 3, col + 1));
-        matchingDescriptor[i * 20] = (s.at<uchar> (row + 3, col + 3));
-        matchingDescriptor[i * 21] = (s.at<uchar> (row + 3, col + 5));
+        matchingDescriptor[j + 16] = (sobels[i].at<uchar> (row + 3, col - 5));
+        matchingDescriptor[j + 17] = (sobels[i].at<uchar> (row + 3, col - 3));
+        matchingDescriptor[j + 18] = (sobels[i].at<uchar> (row + 3, col - 1));
+        matchingDescriptor[j + 19] = (sobels[i].at<uchar> (row + 3, col + 1));
+        matchingDescriptor[j + 20] = (sobels[i].at<uchar> (row + 3, col + 3));
+        matchingDescriptor[j + 21] = (sobels[i].at<uchar> (row + 3, col + 5));
 
-        matchingDescriptor[i * 22] = (s.at<uchar> (row + 5, col - 1));
-        matchingDescriptor[i * 23] = (s.at<uchar> (row + 5, col + 1));
+        matchingDescriptor[j + 22] = (sobels[i].at<uchar> (row + 5, col - 1));
+        matchingDescriptor[j + 23] = (sobels[i].at<uchar> (row + 5, col + 1));
+        
+        j += 24;
 
 
-        refinementDescriptor[i * 0] = (s.at<uchar> (row - 2, col));
+        refinementDescriptor[k + 0] = (sobels[i].at<uchar> (row - 2, col));
 
-        refinementDescriptor[i * 1] = (s.at<uchar> (row - 1, col - 2));
-        refinementDescriptor[i * 2] = (s.at<uchar> (row - 1, col - 1));
-        refinementDescriptor[i * 3] = (s.at<uchar> (row - 1, col));
-        refinementDescriptor[i * 4] = (s.at<uchar> (row - 1, col + 1));
-        refinementDescriptor[i * 5] = (s.at<uchar> (row - 1, col + 2));
+        refinementDescriptor[k + 1] = (sobels[i].at<uchar> (row - 1, col - 2));
+        refinementDescriptor[k + 2] = (sobels[i].at<uchar> (row - 1, col - 1));
+        refinementDescriptor[k + 3] = (sobels[i].at<uchar> (row - 1, col));
+        refinementDescriptor[k + 4] = (sobels[i].at<uchar> (row - 1, col + 1));
+        refinementDescriptor[k + 5] = (sobels[i].at<uchar> (row - 1, col + 2));
 
-        refinementDescriptor[i * 6] = (s.at<uchar> (row, col - 1));
-        refinementDescriptor[i * 7] = (s.at<uchar> (row, col));
-        refinementDescriptor[i * 8] = (s.at<uchar> (row, col + 1));
+        refinementDescriptor[k + 6] = (sobels[i].at<uchar> (row, col - 1));
+        refinementDescriptor[k + 7] = (sobels[i].at<uchar> (row, col));
+        refinementDescriptor[k + 8] = (sobels[i].at<uchar> (row, col + 1));
 
-        refinementDescriptor[i * 9] = (s.at<uchar> (row + 1, col - 2));
-        refinementDescriptor[i * 10] = (s.at<uchar> (row + 1, col - 1));
-        refinementDescriptor[i * 11] = (s.at<uchar> (row + 1, col));
-        refinementDescriptor[i * 12] = (s.at<uchar> (row + 1, col + 1));
-        refinementDescriptor[i * 13] = (s.at<uchar> (row + 1, col + 2));
+        refinementDescriptor[k + 9] = (sobels[i].at<uchar> (row + 1, col - 2));
+        refinementDescriptor[k + 10] = (sobels[i].at<uchar> (row + 1, col - 1));
+        refinementDescriptor[k + 11] = (sobels[i].at<uchar> (row + 1, col));
+        refinementDescriptor[k + 12] = (sobels[i].at<uchar> (row + 1, col + 1));
+        refinementDescriptor[k + 13] = (sobels[i].at<uchar> (row + 1, col + 2));
 
-        refinementDescriptor[i * 14] = (s.at<uchar> (row + 2, col));
+        refinementDescriptor[k + 14] = (sobels[i].at<uchar> (row + 2, col));        
 
-        i++;
+        k += 15;
     }
 }

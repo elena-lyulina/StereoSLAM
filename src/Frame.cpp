@@ -2,6 +2,8 @@
 #include <iostream>
 #include <opencv2/imgproc.hpp>
 #include <vector>
+#include <opencv2/imgcodecs/imgcodecs_c.h>
+#include <opencv2/imgcodecs.hpp>
 
 using namespace std;
 using namespace cv;
@@ -9,11 +11,17 @@ using namespace cv;
 
 Frame::Frame (Mat &img)
 : image (img), integralImage (Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
-  xSobel (Mat::zeros (image.rows, image.cols, CV_8U)), ySobel (Mat::zeros (image.rows, image.cols, CV_8U))
-{
+  xSobel (Mat::zeros (image.rows, image.cols, CV_8U)), ySobel (Mat::zeros (image.rows, image.cols, CV_8U)), blobConvolution(Mat::zeros (image.rows, image.cols, CV_8U)), cornerConvolution(Mat::zeros (image.rows, image.cols, CV_8U)) {
     fillSum ();
-    getXSobelConvolution (image, xSobel);
-    getYSobelConvolution (image, ySobel);
+    doXSobelConvolution(image, xSobel);
+    doYSobelConvolution(image, ySobel);
+    doBlobConvolution(blobConvolution);
+    doCornerConvolution(cornerConvolution);
+}
+
+Frame::Frame(const char *filename) {
+    Mat img = imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
+    *this = Frame(img);
 }
 
 void Frame::fillSum ()
@@ -59,7 +67,7 @@ Mat &Frame::rectSumMat (int sideLength, Mat &result)
     return result;
 }
 
-Mat &Frame::getBlobConvolution (Mat &result)
+Mat &Frame::doBlobConvolution(Mat &result)
 {
     //  (-1, -1, -1, -1, -1,
     //   -1,  1,  1,  1, -1,
@@ -78,7 +86,7 @@ Mat &Frame::getBlobConvolution (Mat &result)
     return result;
 }
 
-Mat &Frame::getCornerConvolution (Mat &result)
+Mat &Frame::doCornerConvolution(Mat &result)
 {
     //  (-1, -1,  0,  1,  1,   (1,
     //   -1, -1,  0,  1,  1,    1,
@@ -123,28 +131,34 @@ Mat &Frame::getCornerConvolution (Mat &result)
 }
 
 
-bool cmp (uchar a, uchar b, int cmp)
-{
-    return (cmp == 1) ? a > b : b > a;
+const Mat &Frame::getImage() {
+    return image;
 }
 
-
-Mat &Frame::getIntegralImage ()
+const Mat &Frame::getIntegralImage ()
 {
     return integralImage;
 }
 
-Mat &Frame::getXSobelConvolution ()
+const Mat &Frame::getXSobelConvolution ()
 {
     return xSobel;
 }
 
-Mat &Frame::getYSobelConvolution ()
+const Mat &Frame::getYSobelConvolution ()
 {
     return ySobel;
 }
 
-Mat &Frame::getXSobelConvolution (Mat image, Mat &result)
+const Mat &Frame::getBlobConvolution() {
+    return blobConvolution;
+}
+
+const Mat &Frame::getCornerConvolution() {
+    return cornerConvolution;
+}
+
+Mat &Frame::doXSobelConvolution(Mat image, Mat &result)
 {
     // x Sobel kernel
     // -1 0 1     [1]
@@ -167,7 +181,7 @@ Mat &Frame::getXSobelConvolution (Mat image, Mat &result)
     return result;
 }
 
-Mat &Frame::getYSobelConvolution (Mat image, Mat &result)
+Mat &Frame::doYSobelConvolution(Mat image, Mat &result)
 {
     // y Sobel kernel
     //  1  2  1     [1]
@@ -282,6 +296,7 @@ void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, Com
         }
     }
 }
+
 
 template void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, greater<int>);
 template void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, less<int>);

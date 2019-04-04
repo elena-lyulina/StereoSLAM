@@ -62,7 +62,7 @@ TEST (Frame, getConvolutionTest)
         filter2D (image, expected_result_blob, image.depth (), blob_detector);
         cv::rectangle (expected_result_blob,
                        cv::Rect (cv::Point (0, 0), expected_result_blob.size ()), Scalar::all (0), n);
-        EXPECT_TRUE (countNonZero (frame.getBlobConvolution (result_blob) != expected_result_blob) == 0)
+        EXPECT_TRUE (countNonZero (frame.doBlobConvolution(result_blob) != expected_result_blob) == 0)
         << result_blob << endl
         << endl
         << expected_result_blob << "\n\n";
@@ -73,9 +73,9 @@ TEST (Frame, getConvolutionTest)
         cv::rectangle (expected_result_corner,
                        cv::Rect (cv::Point (0, 0), expected_result_corner.size ()), Scalar::all (0), n);
 
-        frame.getCornerConvolution (result_corner);
+        frame.doCornerConvolution(result_corner);
 
-        EXPECT_TRUE (countNonZero (frame.getCornerConvolution (result_corner) != expected_result_corner) == 0)
+        EXPECT_TRUE (countNonZero (frame.doCornerConvolution(result_corner) != expected_result_corner) == 0)
         << result_corner << endl
         << endl
         << expected_result_corner;
@@ -180,7 +180,7 @@ TEST (Frame, getXSobelConvolutionTest)
         filter2D (image, expected_result, image.depth (), sobel);
         cv::rectangle (expected_result, cv::Rect (cv::Point (0, 0), expected_result.size ()),
                        Scalar::all (0), n);
-        EXPECT_TRUE (countNonZero (frame.getXSobelConvolution (image, result) != expected_result) == 0)
+        EXPECT_TRUE (countNonZero (frame.doXSobelConvolution(image, result) != expected_result) == 0)
         << "image" << endl
         << image << "\n\n"
         << "result" << endl
@@ -215,7 +215,7 @@ TEST (Frame, getYSobelConvolutionTest)
         filter2D (image, expected_result, image.depth (), sobel);
         cv::rectangle (expected_result, cv::Rect (cv::Point (0, 0), expected_result.size ()),
                        Scalar::all (0), n);
-        EXPECT_TRUE (countNonZero (frame.getYSobelConvolution (image, result) != expected_result) == 0)
+        EXPECT_TRUE (countNonZero (frame.doYSobelConvolution(image, result) != expected_result) == 0)
         << "image" << endl
         << image << "\n\n"
         << "result" << endl
@@ -224,6 +224,7 @@ TEST (Frame, getYSobelConvolutionTest)
         << expected_result << "\n\n";
     }
 }
+
 
 
 int main (int argc, char **argv)

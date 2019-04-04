@@ -32,7 +32,7 @@ static void BM_FeatureMatching (benchmark::State &state)
         Mat result = Mat (image.rows, image.cols, CV_8UC3, Scalar::all (0));
         Frame frame = Frame (image);
         vector<pair<int, int>> blobMaxCoord;
-        Frame::suppression2D (loc, frame.getBlobConvolution (result), blobMaxCoord, greater<int> ());
+        Frame::suppression2D (loc, frame.doBlobConvolution(result), blobMaxCoord, greater<int> ());
         vector<FeaturePoint> blobMaxPoints;
         for (auto p : blobMaxCoord)
         {

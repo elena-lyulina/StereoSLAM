@@ -17,7 +17,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/thirdparty/benchmark)
 # adding google test
 add_subdirectory(${PROJECT_SOURCE_DIR}/thirdparty/googletest)
 
-set(SOURCE_FILES src/Frame.cpp src/Frame.h src/FeatureDetection.cpp src/FeatureDetection.h src/FeaturePoint.cpp src/FeaturePoint.h)
+set(SOURCE_FILES src/Frame.cpp src/Frame.h src/SOFT_FeatureDetector.cpp src/SOFT_FeatureDetector.h src/FeaturePoint.cpp src/FeaturePoint.h)
 add_library(slam ${SOURCE_FILES})
 
 

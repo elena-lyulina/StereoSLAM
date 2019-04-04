@@ -4,3 +4,4 @@ cmake-build-debug/**
 images/**
 res/**
 bin/**
+build_release/**
