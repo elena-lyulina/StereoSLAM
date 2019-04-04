@@ -117,8 +117,8 @@ TEST (Frame, suppression2DTest)
     int maxSize = 1000;
     int times = 100;
     int rows, cols;
-    int maxK = minSize;
     int minK = 1;
+    int maxK = minSize;
     int k;
 
     for (int l = 0; l < times; l++)

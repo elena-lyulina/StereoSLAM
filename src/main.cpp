@@ -29,10 +29,22 @@ int main (int argc, char *argv[])
         return 1;
     }
 
-    pair<Frame, Frame> prevImages = { Frame (filename1), Frame (filename2) };
-    pair<Frame, Frame> succImage = { Frame (filename3), Frame (filename4) };
+    int k = 5;
+    Frame frame (filename1);
 
-    SOFT_FeatureTracker ft (prevImages, succImage);
+    vector<pair<int, int>> max, min;
+    Frame::suppression2D (k, frame.getCornerConvolution (), max, min);
+    cout << endl << "size: " << max.size () << " " << min.size () << endl;
 
-    ft.showMP (BLOB_MAX);
+
+    //    pair<Frame, Frame> prevImages = { Frame (filename1), Frame (filename2) };
+    //    pair<Frame, Frame> succImage = { Frame (filename3), Frame (filename4) };
+    //
+    //    SOFT_FeatureTracker ft (prevImages, succImage);
+    //
+    //    cout << ft.getCyclicallyMatchedPoints()->size() << endl;
+    //
+    //    const int typeAmount = 4;
+    //    pointTypes types[typeAmount] = {BLOB_MAX, BLOB_MIN, CORNER_MAX, CORNER_MIN};
+    //    ft.showMP(typeAmount, types);
 }

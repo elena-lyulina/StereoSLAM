@@ -18,20 +18,22 @@ vector<fp_tuple> *SOFT_FeatureTracker::getCyclicallyMatchedPoints ()
     return fm.getMatchedPointsAllTypes ();
 }
 
-
-void SOFT_FeatureTracker::showMP (int type)
+void SOFT_FeatureTracker::getImagesRGB (Mat *imagesRGB)
 {
     Frame *frames[FRAME_AMOUNT] = { &predFrames->first, &predFrames->second, &succFrames->first,
                                     &succFrames->second };
 
-    Mat imagesRGB[FRAME_AMOUNT];
     for (int i = 0; i < FRAME_AMOUNT; i++)
     {
         imagesRGB[i] =
         Mat (frames[i]->getImage ().rows, frames[i]->getImage ().cols, CV_8UC3, Scalar::all (0));
         cvtColor (frames[i]->getImage (), imagesRGB[i], COLOR_GRAY2BGR);
     }
+}
 
+
+void SOFT_FeatureTracker::showMPOnImages (Mat *imagesRGB, int type)
+{
     vector<fp_tuple> *points = getCyclicallyMatchedPoints ();
     RNG rng (12345);
     Scalar color = Scalar (rng.uniform (10, 255), rng.uniform (10, 255), rng.uniform (10, 255));
@@ -56,4 +58,14 @@ void SOFT_FeatureTracker::showMP (int type)
     }
 
     waitKey ();
+}
+
+void SOFT_FeatureTracker::showMP (int typeAmount, pointTypes types[])
+{
+    Mat imagesRGB[FRAME_AMOUNT];
+    getImagesRGB (imagesRGB);
+    for (int i = 0; i < typeAmount; i++)
+    {
+        showMPOnImages (imagesRGB, types[i]);
+    }
 }

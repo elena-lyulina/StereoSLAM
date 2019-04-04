@@ -14,7 +14,7 @@ class SOFT_FeatureTracker
 
     void handleNextFrames (pair<Frame, Frame> &frames);
     vector<fp_tuple> *getCyclicallyMatchedPoints ();
-    void showMP (int type);
+    void showMP (int typeAmount, pointTypes types[]);
 
     private:
     pair<Frame, Frame> *predFrames;
@@ -22,4 +22,7 @@ class SOFT_FeatureTracker
 
     SOFT_FeatureDetector fd;
     SOFT_FeatureMatcher fm;
+
+    void showMPOnImages (Mat *imagesRGB, int type);
+    void getImagesRGB (Mat *imagesRGB);
 };
