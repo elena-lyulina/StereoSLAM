@@ -6,7 +6,7 @@ SOFT_FeatureDetector::SOFT_FeatureDetector (pair<Frame, Frame> &predFrames, pair
 : predFrames (&predFrames), succFrames (&succFrames)
 {
 
-    int supprArea = 10;
+    int supprArea = 5;
     Frame *frames[FRAME_AMOUNT] = { &predFrames.first, &predFrames.second, &succFrames.second,
                                     &succFrames.first };
 

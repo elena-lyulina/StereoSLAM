@@ -11,10 +11,10 @@ using namespace cv;
 
 Frame::Frame (Mat &img)
 : image (img), integralImage (Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
-  xSobel (Mat::zeros (image.rows, image.cols, CV_8U)),
-  ySobel (Mat::zeros (image.rows, image.cols, CV_8U)),
-  blobConvolution (Mat::zeros (image.rows, image.cols, CV_8U)),
-  cornerConvolution (Mat::zeros (image.rows, image.cols, CV_8U))
+  xSobel (Mat::zeros (image.rows, image.cols, CV_32S)),
+  ySobel (Mat::zeros (image.rows, image.cols, CV_32S)),
+  blobConvolution (Mat::zeros (image.rows, image.cols, CV_32S)),
+  cornerConvolution (Mat::zeros (image.rows, image.cols, CV_32S))
 {
     fillSum ();
     doXSobelConvolution (image, xSobel);
@@ -31,7 +31,7 @@ Frame::Frame (const char *filename)
 
 void Frame::fillSum ()
 {
-    uint current_line_sum = 0;
+    int current_line_sum = 0;
 
     // assuming that the first column and raw are filled with zeros
     // fill other rows, using sum of previous rows
@@ -41,7 +41,7 @@ void Frame::fillSum ()
         for (int j = 0; j < image.cols; j++)
         {
             current_line_sum += image.at<uchar> (i, j);
-            integralImage.at<uint> (i + 1, j + 1) = current_line_sum + integralImage.at<uint> (i, j + 1);
+            integralImage.at<int> (i + 1, j + 1) = current_line_sum + integralImage.at<int> (i, j + 1);
         }
     }
 }
@@ -80,13 +80,21 @@ Mat &Frame::doBlobConvolution (Mat &result)
     //   -1,  1,  1,  1, -1,
     //   -1, -1, -1, -1, -1 )
 
-    int n = 2;
 
-    Mat temp, temp1, temp2;
-    image.convertTo (temp2, CV_32S);
-    result = 2 * rectSumMat (n + 1, temp) - rectSumMat (2 * n + 1, temp1) + 7 * temp2;
-    cv::rectangle (result, cv::Rect (cv::Point (0, 0), result.size ()), Scalar::all (0), n);
-    result.convertTo (result, CV_8U);
+    Mat temp, temp1, temp2, temp3;
+    image.convertTo (temp, CV_32S);
+
+    const int w = image.cols - 4, h = image.rows - 4;
+
+    result (Rect (2, 2, w, h)) =
+    2 * integralImage (Rect (4, 4, w, h)) - 2 * integralImage (Rect (1, 4, w, h)) +
+    2 * integralImage (Rect (1, 1, w, h)) - 2 * integralImage (Rect (4, 1, w, h))
+
+    - integralImage (Rect (5, 5, w, h)) + integralImage (Rect (0, 5, w, h)) -
+    integralImage (Rect (0, 0, w, h)) + integralImage (Rect (5, 0, w, h))
+
+    + 7 * temp (Rect (2, 2, w, h));
+
 
     return result;
 }
@@ -101,34 +109,17 @@ Mat &Frame::doCornerConvolution (Mat &result)
 
 
     Mat rowMult (result.rows, result.cols, CV_32S, Scalar::all (0));
-    Mat colMult (result.rows, result.cols, CV_32S, Scalar::all (0));
+    Mat temp;
+    image.convertTo (temp, CV_32S);
 
-    const int w = image.cols, h = image.rows;
-    rowMult (Rect (0, 2, w, h - 4)) =
-    image (Rect (0, 0, image.cols, image.rows - 4)) + image (Rect (0, 1, image.cols, image.rows - 4)) -
-    image (Rect (0, 3, image.cols, image.rows - 4)) - image (Rect (0, 4, image.cols, image.rows - 4));
+    const int w = temp.cols, h = temp.rows;
 
-    colMult (Rect (2, 2, image.cols - 4, image.rows - 4)) =
-    -rowMult (Rect (0, 2, image.cols - 4, image.rows - 4)) -
-    rowMult (Rect (1, 2, image.cols - 4, image.rows - 4)) +
-    rowMult (Rect (3, 2, image.cols - 4, image.rows - 4)) +
-    rowMult (Rect (4, 2, image.cols - 4, image.rows - 4));
-    colMult.convertTo (result, CV_8U);
-#if 0
-    for (int i = 2; i < image.rows - 2; i++)
-    {
-        add (image.row (i - 2), image.row (i - 1), rowMult.row (i));
-        subtract (rowMult.row (i), image.row (i + 1), rowMult.row (i));
-        subtract (rowMult.row (i), image.row (i + 2), rowMult.row (i));
-    }
+    rowMult (Rect (0, 2, w, h - 4)) = temp (Rect (0, 0, w, h - 4)) + temp (Rect (0, 1, w, h - 4)) -
+                                      temp (Rect (0, 3, w, h - 4)) - temp (Rect (0, 4, w, h - 4));
 
-    for (int i = 2; i < image.cols - 2; i++)
-    {
-        add (rowMult.col (i + 2), rowMult.col (i + 1), colMult.col (i));
-        subtract (colMult.col (i), rowMult.col (i - 1), colMult.col (i));
-        subtract (colMult.col (i), rowMult.col (i - 2), result.col (i));
-    }
-#endif
+    result (Rect (2, 2, w - 4, h - 4)) =
+    -rowMult (Rect (0, 2, w - 4, h - 4)) - rowMult (Rect (1, 2, w - 4, h - 4)) +
+    rowMult (Rect (3, 2, w - 4, h - 4)) + rowMult (Rect (4, 2, w - 4, h - 4));
     return result;
 }
 
@@ -170,18 +161,18 @@ Mat &Frame::doXSobelConvolution (Mat image, Mat &result)
     // -2 0 2  =  [2] * [-1, 0, 1]
     // -1 0 1     [1]
 
-    Mat rowMult (result.rows, result.cols, CV_16S, Scalar::all (0));
-    for (int i = 1; i < image.cols - 1; i++)
-    {
-        subtract (image.col (i + 1), image.col (i - 1), rowMult.col (i));
-    }
 
-    Mat temp (1, result.cols, CV_16S, Scalar::all (0));
-    for (int i = 1; i < rowMult.rows - 1; i++)
-    {
-        add (2 * rowMult.row (i), rowMult.row (i - 1), temp);
-        add (temp, rowMult.row (i + 1), result.row (i));
-    }
+    Mat rowMult (result.rows, result.cols, CV_32S, Scalar::all (0));
+    Mat temp;
+    image.convertTo (temp, CV_32S);
+
+    const int w = temp.cols, h = temp.rows;
+
+    rowMult (Rect (0, 1, w, h - 2)) =
+    temp (Rect (0, 0, w, h - 2)) + 2 * temp (Rect (0, 1, w, h - 2)) + temp (Rect (0, 2, w, h - 2));
+
+    result (Rect (1, 1, w - 2, h - 2)) =
+    -rowMult (Rect (0, 1, w - 2, h - 2)) + rowMult (Rect (2, 1, w - 2, h - 2));
 
     return result;
 }
@@ -193,19 +184,18 @@ Mat &Frame::doYSobelConvolution (Mat image, Mat &result)
     //  0  0  0  =  [0] * [1, 2, 1]
     // -1 -2 -1     [-1]
 
-    Mat rowMult (result.rows, result.cols, CV_16S, Scalar::all (0));
-    Mat temp (result.rows, 1, CV_16S, Scalar::all (0));
 
-    for (int i = 1; i < image.rows - 1; i++)
-    {
-        subtract (image.row (i - 1), image.row (i + 1), rowMult.row (i));
-    }
+    Mat rowMult (result.rows, result.cols, CV_32S, Scalar::all (0));
+    Mat temp;
+    image.convertTo (temp, CV_32S);
 
-    for (int i = 1; i < rowMult.cols - 1; i++)
-    {
-        add (2 * rowMult.col (i), rowMult.col (i - 1), temp);
-        add (temp, rowMult.col (i + 1), result.col (i));
-    }
+    const int w = temp.cols, h = temp.rows;
+
+    rowMult (Rect (0, 1, w, h - 2)) = temp (Rect (0, 0, w, h - 2)) - temp (Rect (0, 2, w, h - 2));
+
+    result (Rect (1, 1, w - 2, h - 2)) = rowMult (Rect (0, 1, w - 2, h - 2)) +
+                                         2 * rowMult (Rect (1, 1, w - 2, h - 2)) +
+                                         rowMult (Rect (2, 1, w - 2, h - 2));
 
     return result;
 }
