@@ -1,5 +1,6 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCMAKE_BUILD_TYPE=Release")
 set(BENCHMARKS bench_FeatureMatching bench_Frame)
+add_definitions(-DPATH_TO_IMG="/home/elena/workspaces/c++/StereoSLAM/res/lp.png")
 
 foreach(CUR_BENCH ${BENCHMARKS})
  #   find_package(OpenCV REQUIRED core imgproc highgui)

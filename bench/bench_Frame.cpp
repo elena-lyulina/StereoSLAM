@@ -1,8 +1,8 @@
-#include "../src/FeatureDetection.h"
+#include "../src/Frame.h"
 #include <benchmark/benchmark.h>
+#include <memory>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
-#include <memory>
 
 
 class SuppressionFixture : public benchmark::Fixture
@@ -10,12 +10,12 @@ class SuppressionFixture : public benchmark::Fixture
     public:
     void SetUp (const ::benchmark::State &state)
     {
-        const char *filename = "/home/elena/workspaces/c++/StereoSLAM/res/lp.png";
+        const char *filename = PATH_TO_IMG;
         Mat image = imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
         Mat result = Mat (image.rows, image.cols, CV_8UC3, Scalar::all (0));
         Frame frame = Frame (image);
 
-        mat = frame.doBlobConvolution(result);
+        mat = frame.doBlobConvolution (result);
         suppressed = vector<pair<int, int>> ();
     }
     int loc = 20;
@@ -45,10 +45,10 @@ class ConvolutionFixture : public benchmark::Fixture
     public:
     void SetUp (const ::benchmark::State &state)
     {
-        const char *filename = "/home/elena/workspaces/c++/StereoSLAM/res/lp.png";
+        const char *filename = PATH_TO_IMG;
         image = imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
         result = Mat (image.rows, image.cols, CV_8UC3, Scalar::all (0));
-        frame = std::make_unique<Frame>(image);
+        frame = std::make_unique<Frame> (image);
     }
     Mat image;
     Mat result;
@@ -67,7 +67,7 @@ BENCHMARK_DEFINE_F (ConvolutionFixture, BM_BlobConvolution) (benchmark::State &s
     for (auto _ : state)
     {
         Frame frame = Frame (image);
-      frame.doBlobConvolution(result);
+        frame.doBlobConvolution (result);
     }
 }
 
