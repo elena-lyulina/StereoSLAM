@@ -35,7 +35,8 @@ const FeaturePoint *findMatchesOnArea (const FeaturePoint &p, const vector<Featu
 {
     int minError = SADofDescriptors (p, candidates[0]);
     const FeaturePoint *matchedPoint = &candidates[0];
-    for (int i = 0; i < candidates.size(); i++) {
+    for (int i = 0; i < candidates.size (); i++)
+    {
         if (abs (candidates[i].col - p.col) <= areaSize && abs (candidates[i].row - p.row) <= areaSize)
         {
 
@@ -59,7 +60,7 @@ findMatchesOnStrip (const FeaturePoint &p, const vector<FeaturePoint> &candidate
     int minError = SADofDescriptors (p, candidates[0]);
     const FeaturePoint *matchedPoint = &candidates[0];
 
-    for (int i = 0; i < candidates.size(); i++)
+    for (int i = 0; i < candidates.size (); i++)
     {
         if (comp (candidates[i].col, p.col) && abs (candidates[i].row - p.row) <= stripWidth)
         {
@@ -89,7 +90,7 @@ vector<tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, c
     int stripWidth = 10;
     int areaWidth = 50;
 
-    for (int i = 0; i < leftPred.size(); i++)
+    for (int i = 0; i < leftPred.size (); i++)
     {
         // возвращать указатель или id
         // checking strip on right pred image, it should be to the right of leftPred[i]

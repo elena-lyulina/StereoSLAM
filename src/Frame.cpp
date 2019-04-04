@@ -210,98 +210,129 @@ Mat &Frame::doYSobelConvolution (Mat image, Mat &result)
     return result;
 }
 
-
 template <typename Comparator>
-void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, Comparator comp)
+bool equalOrCompNotFound (int n, const Mat &image, int mi, int mj, int i, int j, Comparator comp)
 {
+    bool geNotFound = true;
+
+    for (int i2 = mi - n; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
+    {
+        for (int j2 = mj - n; geNotFound && j2 < j && j2 < image.cols; j2++)
+        {
+
+            if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
+                image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+            {
+                geNotFound = false;
+            }
+        }
+        for (int j2 = j + n + 1; geNotFound && j2 <= mj + n && j2 < image.cols; j2++)
+        {
+
+            if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
+                image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+            {
+                geNotFound = false;
+            }
+        }
+    }
+
+    for (int j2 = j; geNotFound && j2 <= j + n && j2 < image.cols; j2++)
+    {
+        for (int i2 = mi - n; geNotFound && i2 < i && i2 < image.rows; i2++)
+        {
+
+            if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
+                image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+            {
+                geNotFound = false;
+            }
+        }
+
+        for (int i2 = i + n + 1; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
+        {
+
+            if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
+                image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+            {
+                geNotFound = false;
+            }
+        }
+    }
+
+    return geNotFound;
+}
+
+void Frame::suppression2D (int n, const Mat &image, vector<pair<int, int>> &maxResult, vector<pair<int, int>> &minResult)
+{
+
+
+    // looking for max/min value into [n x n] image areas, which top left corner is represented by (i, j) coord
     for (int i = n; i < image.rows - n; i += n + 1)
     {
         for (int j = n; j < image.cols - n; j += n + 1)
         {
+            int maxi = i;
+            int maxj = j;
 
-            int mi = i;
-            int mj = j;
-            bool equalFound = false;
+            int mini = i;
+            int minj = j;
+
+            bool equalMaxFound = false;
+            bool equalMinFound = false;
+
 
             for (int i2 = i; i2 <= i + n; i2++)
             {
                 for (int j2 = j; j2 <= j + n; j2++)
                 {
 
-                    if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)))
+                    if (image.at<uchar> (i2, j2) > image.at<uchar> (maxi, maxj))
                     {
 
-                        equalFound = false;
-                        mi = i2;
-                        mj = j2;
+                        equalMaxFound = false;
+                        maxi = i2;
+                        maxj = j2;
                     }
-                    else if (image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj) && (i2 != mi || j2 != mj))
+                    else if (image.at<uchar> (i2, j2) == image.at<uchar> (maxi, maxj) &&
+                             (i2 != maxi || j2 != maxj))
                     {
+                        equalMaxFound = true;
+                    }
 
-                        equalFound = true;
+                    if (image.at<uchar> (i2, j2) < image.at<uchar> (mini, minj))
+                    {
+                        equalMinFound = false;
+                        mini = i2;
+                        minj = j2;
+                    }
+                    else if (image.at<uchar> (i2, j2) == image.at<uchar> (mini, minj) &&
+                             (i2 != mini || j2 != minj))
+                    {
+                        equalMinFound = true;
                     }
                 }
             }
 
-            if (!equalFound && (mi < image.rows - n) && (mj < image.cols - n))
+            // if max was found, check if there is no another max or equal values outside of
+            // observed [n x n] area and only then it declares as local max
+            if ((!equalMaxFound && (maxi < image.rows - n) && (maxj < image.cols - n)))
             {
-
-                bool geNotFound = true;
-
-                for (int i2 = mi - n; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
+                if (equalOrCompNotFound (n, image, maxi, maxj, i, j, greater<int> ()))
                 {
-                    for (int j2 = mj - n; geNotFound && j2 < j && j2 < image.cols; j2++)
-                    {
-
-                        if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
-                            image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
-                        {
-                            geNotFound = false;
-                        }
-                    }
-                    for (int j2 = j + n + 1; geNotFound && j2 <= mj + n && j2 < image.cols; j2++)
-                    {
-
-                        if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
-                            image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
-                        {
-                            geNotFound = false;
-                        }
-                    }
+                    maxResult.emplace_back (pair<int, int> (maxi, maxj));
                 }
+            }
 
-                for (int j2 = j; geNotFound && j2 <= j + n && j2 < image.cols; j2++)
+            // if min was found, check if there is no another min or equal values outside of
+            // observed [n x n] area and only then it declares as local min
+            if ((!equalMinFound && (mini < image.rows - n) && (minj < image.cols - n)))
+            {
+                if (equalOrCompNotFound (n, image, mini, minj, i, j, less<int> ()))
                 {
-                    for (int i2 = mi - n; geNotFound && i2 < i && i2 < image.rows; i2++)
-                    {
-
-                        if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
-                            image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
-                        {
-                            geNotFound = false;
-                        }
-                    }
-
-                    for (int i2 = i + n + 1; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
-                    {
-
-                        if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
-                            image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
-                        {
-                            geNotFound = false;
-                        }
-                    }
-                }
-
-                if (geNotFound)
-                {
-                    result.emplace_back (pair<int, int> (mi, mj));
+                    minResult.emplace_back (pair<int, int> (mini, minj));
                 }
             }
         }
     }
 }
-
-
-template void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, greater<int>);
-template void Frame::suppression2D (int n, Mat image, vector<pair<int, int>> &result, less<int>);

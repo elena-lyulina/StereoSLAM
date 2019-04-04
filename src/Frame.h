@@ -32,8 +32,9 @@ class Frame
      if comp == 1, then it found local maximum, else - local minimum
      fills vector of pairs(i, j), where i stands for row's coordinate, j - for col's coordinate
      */
-    template <typename Comparator>
-    static void suppression2D (int n, Mat image, vector<pair<int, int>> &result, Comparator comp);
+
+    static void
+    suppression2D (int n, const Mat &image, vector<pair<int, int>> &maxResult, vector<pair<int, int>> &minResult);
 
 
     private:

@@ -14,10 +14,8 @@ SOFT_FeatureDetector::SOFT_FeatureDetector (pair<Frame, Frame> &predFrames, pair
 
     for (int i = 0; i < FRAME_AMOUNT; i++)
     {
-        frames[i]->suppression2D (supprArea, frames[i]->getBlobConvolution (), coord[i][0], greater<int> ());
-        frames[i]->suppression2D (supprArea, frames[i]->getBlobConvolution (), coord[i][1], less<int> ());
-        frames[i]->suppression2D (supprArea, frames[i]->getCornerConvolution (), coord[i][2], greater<int> ());
-        frames[i]->suppression2D (supprArea, frames[i]->getCornerConvolution (), coord[i][3], less<int> ());
+        frames[i]->suppression2D (supprArea, frames[i]->getBlobConvolution (), coord[i][0], coord[i][1]);
+        frames[i]->suppression2D (supprArea, frames[i]->getCornerConvolution (), coord[i][2], coord[i][3]);
 
         for (int k = 0; k < TYPE_AMOUNT; k++)
         {
