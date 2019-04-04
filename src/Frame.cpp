@@ -3,18 +3,13 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
 #include <opencv2/imgproc.hpp>
-#include <vector>
 
-using namespace std;
-using namespace cv;
-
-
-Frame::Frame (Mat &img)
-: image (img), integralImage (Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
-  xSobel (Mat::zeros (image.rows, image.cols, CV_32S)),
-  ySobel (Mat::zeros (image.rows, image.cols, CV_32S)),
-  blobConvolution (Mat::zeros (image.rows, image.cols, CV_32S)),
-  cornerConvolution (Mat::zeros (image.rows, image.cols, CV_32S))
+Frame::Frame (cv::Mat &img)
+: image (img), integralImage (cv::Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
+  xSobel (cv::Mat::zeros (image.rows, image.cols, CV_32S)),
+  ySobel (cv::Mat::zeros (image.rows, image.cols, CV_32S)),
+  blobConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S)),
+  cornerConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S))
 {
     fillSum ();
     doXSobelConvolution (image, xSobel);
@@ -25,7 +20,7 @@ Frame::Frame (Mat &img)
 
 Frame::Frame (const char *filename)
 {
-    Mat img = imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat img = cv::imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
     *this = Frame (img);
 }
 
@@ -54,25 +49,25 @@ int Frame::rectSum (int x, int y, int width, int height)
 }
 
 
-Mat &Frame::rectSumMat (int sideLength, Mat &result)
+cv::Mat &Frame::rectSumMat (int sideLength, cv::Mat &result)
 {
 
     int width = integralImage.cols - sideLength;
     int height = integralImage.rows - sideLength;
     int n = sideLength / 2;
 
-    result = integralImage (Rect (sideLength, sideLength, width, height)) -
-             integralImage (Rect (0, sideLength, width, height)) +
-             integralImage (Rect (0, 0, width, height)) -
-             integralImage (Rect (sideLength, 0, width, height));
+    result = integralImage (cv::Rect (sideLength, sideLength, width, height)) -
+             integralImage (cv::Rect (0, sideLength, width, height)) +
+             integralImage (cv::Rect (0, 0, width, height)) -
+             integralImage (cv::Rect (sideLength, 0, width, height));
 
-    copyMakeBorder (result, result, n, n, n, n, BORDER_CONSTANT);
+    copyMakeBorder (result, result, n, n, n, n, cv::BORDER_CONSTANT);
 
 
     return result;
 }
 
-Mat &Frame::doBlobConvolution (Mat &result)
+cv::Mat &Frame::doBlobConvolution (cv::Mat &result)
 {
     //  (-1, -1, -1, -1, -1,
     //   -1,  1,  1,  1, -1,
@@ -81,25 +76,25 @@ Mat &Frame::doBlobConvolution (Mat &result)
     //   -1, -1, -1, -1, -1 )
 
 
-    Mat temp, temp1, temp2, temp3;
+    cv::Mat temp, temp1, temp2, temp3;
     image.convertTo (temp, CV_32S);
 
     const int w = image.cols - 4, h = image.rows - 4;
 
-    result (Rect (2, 2, w, h)) =
-    2 * integralImage (Rect (4, 4, w, h)) - 2 * integralImage (Rect (1, 4, w, h)) +
-    2 * integralImage (Rect (1, 1, w, h)) - 2 * integralImage (Rect (4, 1, w, h))
+    result (cv::Rect (2, 2, w, h)) =
+    2 * integralImage (cv::Rect (4, 4, w, h)) - 2 * integralImage (cv::Rect (1, 4, w, h)) +
+    2 * integralImage (cv::Rect (1, 1, w, h)) - 2 * integralImage (cv::Rect (4, 1, w, h))
 
-    - integralImage (Rect (5, 5, w, h)) + integralImage (Rect (0, 5, w, h)) -
-    integralImage (Rect (0, 0, w, h)) + integralImage (Rect (5, 0, w, h))
+    - integralImage (cv::Rect (5, 5, w, h)) + integralImage (cv::Rect (0, 5, w, h)) -
+    integralImage (cv::Rect (0, 0, w, h)) + integralImage (cv::Rect (5, 0, w, h))
 
-    + 7 * temp (Rect (2, 2, w, h));
+    + 7 * temp (cv::Rect (2, 2, w, h));
 
 
     return result;
 }
 
-Mat &Frame::doCornerConvolution (Mat &result)
+cv::Mat &Frame::doCornerConvolution (cv::Mat &result)
 {
     //  (-1, -1,  0,  1,  1,   (1,
     //   -1, -1,  0,  1,  1,    1,
@@ -108,53 +103,54 @@ Mat &Frame::doCornerConvolution (Mat &result)
     //    1,  1,  0, -1, -1 )  -1)
 
 
-    Mat rowMult (result.rows, result.cols, CV_32S, Scalar::all (0));
-    Mat temp;
+    cv::Mat rowMult (result.rows, result.cols, CV_32S, cv::Scalar::all (0));
+    cv::Mat temp;
     image.convertTo (temp, CV_32S);
 
     const int w = temp.cols, h = temp.rows;
 
-    rowMult (Rect (0, 2, w, h - 4)) = temp (Rect (0, 0, w, h - 4)) + temp (Rect (0, 1, w, h - 4)) -
-                                      temp (Rect (0, 3, w, h - 4)) - temp (Rect (0, 4, w, h - 4));
+    rowMult (cv::Rect (0, 2, w, h - 4)) =
+    temp (cv::Rect (0, 0, w, h - 4)) + temp (cv::Rect (0, 1, w, h - 4)) -
+    temp (cv::Rect (0, 3, w, h - 4)) - temp (cv::Rect (0, 4, w, h - 4));
 
-    result (Rect (2, 2, w - 4, h - 4)) =
-    -rowMult (Rect (0, 2, w - 4, h - 4)) - rowMult (Rect (1, 2, w - 4, h - 4)) +
-    rowMult (Rect (3, 2, w - 4, h - 4)) + rowMult (Rect (4, 2, w - 4, h - 4));
+    result (cv::Rect (2, 2, w - 4, h - 4)) =
+    -rowMult (cv::Rect (0, 2, w - 4, h - 4)) - rowMult (cv::Rect (1, 2, w - 4, h - 4)) +
+    rowMult (cv::Rect (3, 2, w - 4, h - 4)) + rowMult (cv::Rect (4, 2, w - 4, h - 4));
     return result;
 }
 
 
-const Mat &Frame::getImage ()
+const cv::Mat &Frame::getImage ()
 {
     return image;
 }
 
-const Mat &Frame::getIntegralImage ()
+const cv::Mat &Frame::getIntegralImage ()
 {
     return integralImage;
 }
 
-const Mat &Frame::getXSobelConvolution ()
+const cv::Mat &Frame::getXSobelConvolution ()
 {
     return xSobel;
 }
 
-const Mat &Frame::getYSobelConvolution ()
+const cv::Mat &Frame::getYSobelConvolution ()
 {
     return ySobel;
 }
 
-const Mat &Frame::getBlobConvolution ()
+const cv::Mat &Frame::getBlobConvolution ()
 {
     return blobConvolution;
 }
 
-const Mat &Frame::getCornerConvolution ()
+const cv::Mat &Frame::getCornerConvolution ()
 {
     return cornerConvolution;
 }
 
-Mat &Frame::doXSobelConvolution (Mat image, Mat &result)
+cv::Mat &Frame::doXSobelConvolution (cv::Mat image, cv::Mat &result)
 {
     // x Sobel kernel
     // -1 0 1     [1]
@@ -162,22 +158,23 @@ Mat &Frame::doXSobelConvolution (Mat image, Mat &result)
     // -1 0 1     [1]
 
 
-    Mat rowMult (result.rows, result.cols, CV_32S, Scalar::all (0));
-    Mat temp;
+    cv::Mat rowMult (result.rows, result.cols, CV_32S, cv::Scalar::all (0));
+    cv::Mat temp;
     image.convertTo (temp, CV_32S);
 
     const int w = temp.cols, h = temp.rows;
 
-    rowMult (Rect (0, 1, w, h - 2)) =
-    temp (Rect (0, 0, w, h - 2)) + 2 * temp (Rect (0, 1, w, h - 2)) + temp (Rect (0, 2, w, h - 2));
+    rowMult (cv::Rect (0, 1, w, h - 2)) = temp (cv::Rect (0, 0, w, h - 2)) +
+                                          2 * temp (cv::Rect (0, 1, w, h - 2)) +
+                                          temp (cv::Rect (0, 2, w, h - 2));
 
-    result (Rect (1, 1, w - 2, h - 2)) =
-    -rowMult (Rect (0, 1, w - 2, h - 2)) + rowMult (Rect (2, 1, w - 2, h - 2));
+    result (cv::Rect (1, 1, w - 2, h - 2)) =
+    -rowMult (cv::Rect (0, 1, w - 2, h - 2)) + rowMult (cv::Rect (2, 1, w - 2, h - 2));
 
     return result;
 }
 
-Mat &Frame::doYSobelConvolution (Mat image, Mat &result)
+cv::Mat &Frame::doYSobelConvolution (cv::Mat image, cv::Mat &result)
 {
     // y Sobel kernel
     //  1  2  1     [1]
@@ -185,23 +182,24 @@ Mat &Frame::doYSobelConvolution (Mat image, Mat &result)
     // -1 -2 -1     [-1]
 
 
-    Mat rowMult (result.rows, result.cols, CV_32S, Scalar::all (0));
-    Mat temp;
+    cv::Mat rowMult (result.rows, result.cols, CV_32S, cv::Scalar::all (0));
+    cv::Mat temp;
     image.convertTo (temp, CV_32S);
 
     const int w = temp.cols, h = temp.rows;
 
-    rowMult (Rect (0, 1, w, h - 2)) = temp (Rect (0, 0, w, h - 2)) - temp (Rect (0, 2, w, h - 2));
+    rowMult (cv::Rect (0, 1, w, h - 2)) =
+    temp (cv::Rect (0, 0, w, h - 2)) - temp (cv::Rect (0, 2, w, h - 2));
 
-    result (Rect (1, 1, w - 2, h - 2)) = rowMult (Rect (0, 1, w - 2, h - 2)) +
-                                         2 * rowMult (Rect (1, 1, w - 2, h - 2)) +
-                                         rowMult (Rect (2, 1, w - 2, h - 2));
+    result (cv::Rect (1, 1, w - 2, h - 2)) = rowMult (cv::Rect (0, 1, w - 2, h - 2)) +
+                                             2 * rowMult (cv::Rect (1, 1, w - 2, h - 2)) +
+                                             rowMult (cv::Rect (2, 1, w - 2, h - 2));
 
     return result;
 }
 
 template <typename Comparator>
-bool equalOrCompNotFound (int n, const Mat &image, int mi, int mj, int i, int j, Comparator comp)
+bool equalOrCompNotFound (int n, const cv::Mat &image, int mi, int mj, int i, int j, Comparator comp)
 {
     bool geNotFound = true;
 
@@ -253,7 +251,10 @@ bool equalOrCompNotFound (int n, const Mat &image, int mi, int mj, int i, int j,
     return geNotFound;
 }
 
-void Frame::suppression2D (int n, const Mat &image, vector<pair<int, int>> &maxResult, vector<pair<int, int>> &minResult)
+void Frame::suppression2D (int n,
+                           const cv::Mat &image,
+                           std::vector<std::pair<int, int>> &maxResult,
+                           std::vector<std::pair<int, int>> &minResult)
 {
 
 
@@ -308,9 +309,9 @@ void Frame::suppression2D (int n, const Mat &image, vector<pair<int, int>> &maxR
             // observed [n x n] area and only then it declares as local max
             if ((!equalMaxFound && (maxi < image.rows - n) && (maxj < image.cols - n)))
             {
-                if (equalOrCompNotFound (n, image, maxi, maxj, i, j, greater<int> ()))
+                if (equalOrCompNotFound (n, image, maxi, maxj, i, j, std::greater<int> ()))
                 {
-                    maxResult.emplace_back (pair<int, int> (maxi, maxj));
+                    maxResult.emplace_back (std::pair<int, int> (maxi, maxj));
                 }
             }
 
@@ -318,9 +319,9 @@ void Frame::suppression2D (int n, const Mat &image, vector<pair<int, int>> &maxR
             // observed [n x n] area and only then it declares as local min
             if ((!equalMinFound && (mini < image.rows - n) && (minj < image.cols - n)))
             {
-                if (equalOrCompNotFound (n, image, mini, minj, i, j, less<int> ()))
+                if (equalOrCompNotFound (n, image, mini, minj, i, j, std::less<int> ()))
                 {
-                    minResult.emplace_back (pair<int, int> (mini, minj));
+                    minResult.emplace_back (std::pair<int, int> (mini, minj));
                 }
             }
         }

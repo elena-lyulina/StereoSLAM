@@ -1,8 +1,6 @@
-#include "SOFT_FeatureDetector.h"
-#include <opencv/cv.hpp>
+#include "FeatureDetector.h"
 
-
-SOFT_FeatureDetector::SOFT_FeatureDetector (pair<Frame, Frame> &predFrames, pair<Frame, Frame> &succFrames)
+FeatureDetector::FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair<Frame, Frame> &succFrames)
 : predFrames (&predFrames), succFrames (&succFrames)
 {
 
@@ -10,7 +8,7 @@ SOFT_FeatureDetector::SOFT_FeatureDetector (pair<Frame, Frame> &predFrames, pair
     Frame *frames[FRAME_AMOUNT] = { &predFrames.first, &predFrames.second, &succFrames.second,
                                     &succFrames.first };
 
-    vector<pair<int, int>> coord[FRAME_AMOUNT][TYPE_AMOUNT];
+    std::vector<std::pair<int, int>> coord[FRAME_AMOUNT][TYPE_AMOUNT];
 
     for (int i = 0; i < FRAME_AMOUNT; i++)
     {
@@ -27,7 +25,7 @@ SOFT_FeatureDetector::SOFT_FeatureDetector (pair<Frame, Frame> &predFrames, pair
         }
     }
 }
-vector<FeaturePoint> &SOFT_FeatureDetector::getDetectedPoints (int frame, int type)
+std::vector<FeaturePoint> &FeatureDetector::getDetectedPoints (int frame, int type)
 {
     return detectedPoints[frame][type];
 }

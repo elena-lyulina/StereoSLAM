@@ -3,27 +3,24 @@
 #include <iostream>
 #include <opencv2/imgproc.hpp>
 
-using namespace std;
-using namespace cv;
-
 class Frame
 {
     public:
-    Frame (Mat &img);
+    Frame (cv::Mat &img);
     Frame (const char *filename);
-    const Mat &getImage ();
-    const Mat &getIntegralImage ();
-    const Mat &getXSobelConvolution ();
-    const Mat &getYSobelConvolution ();
-    const Mat &getBlobConvolution ();
-    const Mat &getCornerConvolution ();
+    const cv::Mat &getImage ();
+    const cv::Mat &getIntegralImage ();
+    const cv::Mat &getXSobelConvolution ();
+    const cv::Mat &getYSobelConvolution ();
+    const cv::Mat &getBlobConvolution ();
+    const cv::Mat &getCornerConvolution ();
 
-    static Mat &doXSobelConvolution (Mat image, Mat &result);
-    static Mat &doYSobelConvolution (Mat image, Mat &result);
+    static cv::Mat &doXSobelConvolution (cv::Mat image, cv::Mat &result);
+    static cv::Mat &doYSobelConvolution (cv::Mat image, cv::Mat &result);
     int rectSum (int x, int y, int width, int height);
 
-    Mat &doBlobConvolution (Mat &result);
-    Mat &doCornerConvolution (Mat &result);
+    cv::Mat &doBlobConvolution (cv::Mat &result);
+    cv::Mat &doCornerConvolution (cv::Mat &result);
 
 
     /*
@@ -33,25 +30,27 @@ class Frame
      fills vector of pairs(i, j), where i stands for row's coordinate, j - for col's coordinate
      */
 
-    static void
-    suppression2D (int n, const Mat &image, vector<pair<int, int>> &maxResult, vector<pair<int, int>> &minResult);
+    static void suppression2D (int n,
+                               const cv::Mat &image,
+                               std::vector<std::pair<int, int>> &maxResult,
+                               std::vector<std::pair<int, int>> &minResult);
 
 
     private:
-    Mat image;
-    Mat integralImage;
-    Mat xSobel;
-    Mat ySobel;
-    Mat blobConvolution;
-    Mat cornerConvolution;
+    cv::Mat image;
+    cv::Mat integralImage;
+    cv::Mat xSobel;
+    cv::Mat ySobel;
+    cv::Mat blobConvolution;
+    cv::Mat cornerConvolution;
 
     /*
       Counting sum of squared pixels intensities, starting from the top left corner (taken as (0,0)
       coordinate); The sum of pixels intensities, placed between (0,0) and (i,j) is stored at (i,j)
-      coordinates in integralImage mat, assuming that integralImage mat has the same size as image
+      coordinates in integralImage cv::Mat, assuming that integralImage cv::Mat has the same size as image
      */
     void fillSum ();
 
 
-    Mat &rectSumMat (int sideLength, Mat &result);
+    cv::Mat &rectSumMat (int sideLength, cv::Mat &result);
 };

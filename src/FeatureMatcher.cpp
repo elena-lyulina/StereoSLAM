@@ -1,8 +1,8 @@
-#include "SOFT_FeatureMatcher.h"
+#include "FeatureMatcher.h"
 #include <opencv/cv.hpp>
 
 
-SOFT_FeatureMatcher::SOFT_FeatureMatcher (SOFT_FeatureDetector &fd)
+FeatureMatcher::FeatureMatcher (FeatureDetector &fd)
 {
     doMatchingCircle (fd.getDetectedPoints (LEFT_PRED, BLOB_MAX), fd.getDetectedPoints (RIGHT_PRED, BLOB_MAX),
                       fd.getDetectedPoints (RIGHT_SUCC, BLOB_MAX),
@@ -31,7 +31,8 @@ int SADofDescriptors (const FeaturePoint &fp1, const FeaturePoint &fp2)
 }
 
 
-const FeaturePoint *findMatchesOnArea (const FeaturePoint &p, const vector<FeaturePoint> &candidates, int areaSize)
+const FeaturePoint *
+findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candidates, int areaSize)
 {
     int minError = SADofDescriptors (p, candidates[0]);
     const FeaturePoint *matchedPoint = &candidates[0];
@@ -55,7 +56,7 @@ const FeaturePoint *findMatchesOnArea (const FeaturePoint &p, const vector<Featu
 
 template <typename Comparator>
 const FeaturePoint *
-findMatchesOnStrip (const FeaturePoint &p, const vector<FeaturePoint> &candidates, int stripWidth, Comparator comp)
+findMatchesOnStrip (const FeaturePoint &p, const std::vector<FeaturePoint> &candidates, int stripWidth, Comparator comp)
 {
     int minError = SADofDescriptors (p, candidates[0]);
     const FeaturePoint *matchedPoint = &candidates[0];
@@ -79,12 +80,12 @@ findMatchesOnStrip (const FeaturePoint &p, const vector<FeaturePoint> &candidate
 }
 
 
-void SOFT_FeatureMatcher::doMatchingCircle (
-const vector<FeaturePoint> &leftPred,
-const vector<FeaturePoint> &rightPred,
-const vector<FeaturePoint> &rightSucc,
-const vector<FeaturePoint> &leftSucc,
-vector<tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, const FeaturePoint *>> &matched)
+void FeatureMatcher::doMatchingCircle (
+const std::vector<FeaturePoint> &leftPred,
+const std::vector<FeaturePoint> &rightPred,
+const std::vector<FeaturePoint> &rightSucc,
+const std::vector<FeaturePoint> &leftSucc,
+std::vector<std::tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, const FeaturePoint *>> &matched)
 {
 
     int stripWidth = 10;
@@ -114,11 +115,11 @@ vector<tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, c
     }
 }
 
-vector<fp_tuple> SOFT_FeatureMatcher::getMatchedPoints (int type)
+std::vector<fp_tuple> FeatureMatcher::getMatchedPoints (int type)
 {
     return matchedPoints[type];
 }
-vector<fp_tuple> *SOFT_FeatureMatcher::getMatchedPointsAllTypes ()
+std::vector<fp_tuple> *FeatureMatcher::getMatchedPointsAllTypes ()
 {
     return matchedPoints;
 }

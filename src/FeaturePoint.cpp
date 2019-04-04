@@ -1,7 +1,3 @@
-//
-// Created by elena on 20.03.19.
-//
-
 #include "FeaturePoint.h"
 
 FeaturePoint::FeaturePoint (Frame &frame, int row, int col) : row (row), col (col), frame (frame)
@@ -30,7 +26,7 @@ FeaturePoint::FeaturePoint (Frame &frame, int row, int col) : row (row), col (co
     frame.getXSobelConvolution ().at<uchar> (row - 5, col - 1);
 
     const int size = 2;
-    Mat sobels[size] = { frame.getXSobelConvolution (), frame.getYSobelConvolution () };
+    cv::Mat sobels[size] = { frame.getXSobelConvolution (), frame.getYSobelConvolution () };
     matchingDescriptor[0 + 0] = (sobels[0].at<uchar> (row - 5, col - 1));
     int j = 0;
     int k = 0;
