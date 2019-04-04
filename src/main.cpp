@@ -1,6 +1,7 @@
 #include "FeaturePoint.h"
 #include "Frame.h"
 #include "SOFT_FeatureDetector.h"
+#include "SOFT_FeatureTracker.h"
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -28,10 +29,10 @@ int main (int argc, char *argv[])
         return 1;
     }
 
-    pair<Frame, Frame> prevImages = {Frame(filename1), Frame(filename2)};
-    pair<Frame, Frame> succImage = {Frame(filename3), Frame(filename4)};
+    pair<Frame, Frame> prevImages = { Frame (filename1), Frame (filename2) };
+    pair<Frame, Frame> succImage = { Frame (filename3), Frame (filename4) };
 
-    SOFT_FeatureDetector fd(prevImages, succImage);
+    SOFT_FeatureTracker ft (prevImages, succImage);
 
-    fd.showMP();
+    ft.showMP (BLOB_MAX);
 }

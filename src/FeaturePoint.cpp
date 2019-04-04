@@ -4,8 +4,7 @@
 
 #include "FeaturePoint.h"
 
-FeaturePoint::FeaturePoint (Frame &frame, int row, int col)
-: row (row), col (col), frame (frame)
+FeaturePoint::FeaturePoint (Frame &frame, int row, int col) : row (row), col (col), frame (frame)
 {
     // Matching patch:
     //    .  .  .  .  #  .  #  .  .  .  .
@@ -28,9 +27,8 @@ FeaturePoint::FeaturePoint (Frame &frame, int row, int col)
     //    .  .  #  .  .
 
 
-    
     frame.getXSobelConvolution ().at<uchar> (row - 5, col - 1);
-    
+
     const int size = 2;
     Mat sobels[size] = { frame.getXSobelConvolution (), frame.getYSobelConvolution () };
     matchingDescriptor[0 + 0] = (sobels[0].at<uchar> (row - 5, col - 1));
@@ -67,7 +65,7 @@ FeaturePoint::FeaturePoint (Frame &frame, int row, int col)
 
         matchingDescriptor[j + 22] = (sobels[i].at<uchar> (row + 5, col - 1));
         matchingDescriptor[j + 23] = (sobels[i].at<uchar> (row + 5, col + 1));
-        
+
         j += 24;
 
 
@@ -89,7 +87,7 @@ FeaturePoint::FeaturePoint (Frame &frame, int row, int col)
         refinementDescriptor[k + 12] = (sobels[i].at<uchar> (row + 1, col + 1));
         refinementDescriptor[k + 13] = (sobels[i].at<uchar> (row + 1, col + 2));
 
-        refinementDescriptor[k + 14] = (sobels[i].at<uchar> (row + 2, col));        
+        refinementDescriptor[k + 14] = (sobels[i].at<uchar> (row + 2, col));
 
         k += 15;
     }

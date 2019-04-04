@@ -1,43 +1,42 @@
 #pragma once
+#include "FeaturePoint.h"
 #include <iostream>
 #include <opencv2/imgproc.hpp>
-#include "FeaturePoint.h"
 
 using namespace std;
 using namespace cv;
 
-typedef tuple<const FeaturePoint*, const FeaturePoint*, const FeaturePoint*,const  FeaturePoint*> fp_tuple;
 
-class SOFT_FeatureDetector {
- public:
-  SOFT_FeatureDetector(pair<Frame, Frame> &prevImages, pair<Frame, Frame> &succImages);
-  vector<fp_tuple> getMatchingPoints();
+enum pointTypes
+{
+    TYPE_AMOUNT = 4,
 
-  vector<fp_tuple> getBlobMaxMatchingPoints();
-  vector<fp_tuple> getBlobMinMatchingPoints();
-  vector<fp_tuple> getCornerMaxMatchingPoints();
-  vector<fp_tuple> getCornerMinMatchingPoints();
-
-  void showMP();
-
-
- private:
-  pair<Frame, Frame> &prevImages;
-  pair<Frame, Frame> &succImages;
-  static void doMatchingCircle (const vector<FeaturePoint> &leftPred,
-                                const vector<FeaturePoint> &rightPred,
-                                const vector<FeaturePoint> &rightSucc,
-                                const vector<FeaturePoint> &leftSucc,
-                                vector<fp_tuple> &matched);
-
-
-  vector<fp_tuple> blobMaxMatchingPoints;
-  vector<fp_tuple> blobMinMatchingPoints;
-  vector<fp_tuple> cornerMaxMatchingPoints;
-  vector<fp_tuple> cornerMinMatchingPoints;
-
-
-
+    BLOB_MAX = 0,
+    BLOB_MIN = 1,
+    CORNER_MAX = 2,
+    CORNER_MIN = 3
 };
 
+enum frameNumber
+{
+    FRAME_AMOUNT = 4,
 
+    LEFT_PRED = 0,
+    RIGHT_PRED = 1,
+    RIGHT_SUCC = 2,
+    LEFT_SUCC = 3
+};
+
+class SOFT_FeatureDetector
+{
+    public:
+    SOFT_FeatureDetector (pair<Frame, Frame> &predFrames, pair<Frame, Frame> &succFrames);
+    vector<FeaturePoint> &getDetectedPoints (int frame, int type);
+
+
+    private:
+    pair<Frame, Frame> *predFrames;
+    pair<Frame, Frame> *succFrames;
+
+    vector<FeaturePoint> detectedPoints[FRAME_AMOUNT][TYPE_AMOUNT];
+};
