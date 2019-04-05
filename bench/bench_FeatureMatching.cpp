@@ -1,4 +1,5 @@
-#include "../src/FeatureDetection.h"
+#include "../src/FeaturePoint.h"
+#include "../src/Frame.h"
 #include <benchmark/benchmark.h>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
@@ -28,21 +29,21 @@ static void BM_FeatureMatching (benchmark::State &state)
         int loc = 20;
         int error = 100;
         const char *filename = "/home/elena/workspaces/c++/StereoSLAM/res/lp.png";
-        Mat image = imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
-        Mat result = Mat (image.rows, image.cols, CV_8UC3, Scalar::all (0));
+        cv::Mat image = cv::imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
+        cv::Mat result = cv::Mat (image.rows, image.cols, CV_8UC3, cv::Scalar::all (0));
         Frame frame = Frame (image);
-        vector<pair<int, int>> blobMaxCoord;
-        Frame::suppression2D (loc, frame.doBlobConvolution (result), blobMaxCoord, greater<int> ());
-        vector<FeaturePoint> blobMaxPoints;
+        std::vector<std::pair<int, int>> blobMaxCoord;
+        //  Frame::suppression2D (loc, frame.doBlobConvolution (result), blobMaxCoord, std::greater<int> ());
+        std::vector<FeaturePoint> blobMaxPoints;
         for (auto p : blobMaxCoord)
         {
             blobMaxPoints.emplace_back (frame, p.first, p.second);
         }
 
-        vector<tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, const FeaturePoint *>> matchesBMax;
+        std::vector<std::tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, const FeaturePoint *>> matchesBMax;
 
 
-        FeatureDetection::doMatchingCircle (blobMaxPoints, blobMaxPoints, blobMaxPoints, blobMaxPoints, matchesBMax);
+        // FeatureDetection::doMatchingCircle (blobMaxPoints, blobMaxPoints, blobMaxPoints, blobMaxPoints, matchesBMax);
     }
 }
 

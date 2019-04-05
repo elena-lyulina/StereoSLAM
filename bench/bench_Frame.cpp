@@ -11,16 +11,16 @@ class SuppressionFixture : public benchmark::Fixture
     void SetUp (const ::benchmark::State &state)
     {
         const char *filename = PATH_TO_IMG;
-        Mat image = imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
-        Mat result = Mat (image.rows, image.cols, CV_8UC3, Scalar::all (0));
+        cv::Mat image = cv::imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
+        cv::Mat result = cv::Mat (image.rows, image.cols, CV_8UC3, cv::Scalar::all (0));
         Frame frame = Frame (image);
 
-        mat = frame.doBlobConvolution (result);
-        suppressed = vector<pair<int, int>> ();
+        Mat = frame.doBlobConvolution (result);
+        suppressed = std::vector<std::pair<int, int>> ();
     }
     int loc = 20;
-    Mat mat;
-    vector<pair<int, int>> suppressed;
+    cv::Mat Mat;
+    std::vector<std::pair<int, int>> suppressed;
 
 
     void TearDown (const ::benchmark::State &state)
@@ -33,7 +33,7 @@ BENCHMARK_DEFINE_F (SuppressionFixture, BM_Suppression2D) (benchmark::State &sta
 {
     for (auto _ : state)
     {
-        Frame::suppression2D (loc, mat, suppressed, greater<int> ());
+        Frame::suppression2D (loc, cv::Mat, suppressed, std::greater<int> ());
     }
 }
 
@@ -46,12 +46,12 @@ class ConvolutionFixture : public benchmark::Fixture
     void SetUp (const ::benchmark::State &state)
     {
         const char *filename = PATH_TO_IMG;
-        image = imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
-        result = Mat (image.rows, image.cols, CV_8UC3, Scalar::all (0));
+        image = cv::imread (filename, CV_LOAD_IMAGE_GRAYSCALE);
+        result = cv::Mat (image.rows, image.cols, CV_8UC3, cv::Scalar::all (0));
         frame = std::make_unique<Frame> (image);
     }
-    Mat image;
-    Mat result;
+    cv::Mat image;
+    cv::Mat result;
 
 
     std::unique_ptr<Frame> frame;

@@ -4,13 +4,13 @@
 
 TEST (Frame, fillSumTest)
 {
-    Mat image = (Mat_<uchar> (5, 5) << 0, 1, 2, 3, 4, 1, 5, 6, 7, 8, 2, 6, 9, 10, 11, 3, 7, 10, 12,
-                 13, 4, 8, 11, 13, 14);
+    cv::Mat image = (cv::Mat_<uchar> (5, 5) << 0, 1, 2, 3, 4, 1, 5, 6, 7, 8, 2, 6, 9, 10, 11, 3, 7,
+                     10, 12, 13, 4, 8, 11, 13, 14);
 
     Frame frame (image);
 
-    const Mat expectedIntegralImage =
-    (Mat_<float> (6, 6) << 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 6, 10, 0, 1, 7, 15, 25, 37, 0, 3, 15, 32,
+    const cv::Mat expectedIntegralImage =
+    (cv::Mat_<int> (6, 6) << 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 6, 10, 0, 1, 7, 15, 25, 37, 0, 3, 15, 32,
      52, 75, 0, 6, 25, 52, 84, 120, 0, 10, 37, 75, 120, 170);
 
     EXPECT_EQ (image.rows, expectedIntegralImage.rows - 1);
@@ -21,8 +21,8 @@ TEST (Frame, fillSumTest)
 
 TEST (Frame, rectSumTest)
 {
-    Mat image = (Mat_<uchar> (5, 5) << 0, 1, 2, 3, 4, 1, 5, 6, 7, 8, 2, 6, 9, 10, 11, 3, 7, 10, 12,
-                 13, 4, 8, 11, 13, 14);
+    cv::Mat image = (cv::Mat_<uchar> (5, 5) << 0, 1, 2, 3, 4, 1, 5, 6, 7, 8, 2, 6, 9, 10, 11, 3, 7,
+                     10, 12, 13, 4, 8, 11, 13, 14);
 
     Frame frame (image);
 
@@ -36,8 +36,8 @@ TEST (Frame, rectSumTest)
 TEST (Frame, blobConvolutionTest)
 {
     int n = 2;
-    Mat blob_detector = (Mat_<char> (2 * n + 1, 2 * n + 1) << -1, -1, -1, -1, -1, -1, 1, 1, 1, -1,
-                         -1, 1, 8, 1, -1, -1, 1, 1, 1, -1, -1, -1, -1, -1, -1);
+    cv::Mat blob_detector = (cv::Mat_<char> (2 * n + 1, 2 * n + 1) << -1, -1, -1, -1, -1, -1, 1, 1,
+                             1, -1, -1, 1, 8, 1, -1, -1, 1, 1, 1, -1, -1, -1, -1, -1, -1);
 
     int minSize = 5;
     int maxSize = 1000;
@@ -48,24 +48,24 @@ TEST (Frame, blobConvolutionTest)
     {
         rows = rand () % (maxSize - minSize + 1) + minSize;
         cols = rand () % (maxSize - minSize + 1) + minSize;
-        Mat image (rows, cols, CV_8U);
-        randu (image, Scalar (0), Scalar (255));
+        cv::Mat image (rows, cols, CV_8U);
+        randu (image, cv::Scalar (0), cv::Scalar (255));
 
         Frame frame (image);
 
         // filter2D doesnt let CV_32S images, so convert to CV_32F
-        Mat temp, expected_result_blob;
+        cv::Mat temp, expected_result_blob;
         image.convertTo (temp, CV_32F);
         filter2D (temp, expected_result_blob, -1, blob_detector);
-        cv::rectangle (expected_result_blob,
-                       cv::Rect (cv::Point (0, 0), expected_result_blob.size ()), Scalar::all (0), n);
+        cv::rectangle (expected_result_blob, cv::Rect (cv::Point (0, 0), expected_result_blob.size ()),
+                       cv::Scalar::all (0), n);
         expected_result_blob.convertTo (expected_result_blob, CV_32S);
 
 
         EXPECT_TRUE (countNonZero (frame.getBlobConvolution () != expected_result_blob) == 0)
-        << image << endl
-        << frame.getBlobConvolution () << endl
-        << endl
+        << image << std::endl
+        << frame.getBlobConvolution () << std::endl
+        << std::endl
         << expected_result_blob << "\n\n";
     }
 }
@@ -75,8 +75,8 @@ TEST (Frame, getConvolutionTest)
 {
     int n = 2;
 
-    Mat corner_detector = (Mat_<char> (2 * n + 1, 2 * n + 1) << -1, -1, 0, 1, 1, -1, -1, 0, 1, 1, 0,
-                           0, 0, 0, 0, 1, 1, 0, -1, -1, 1, 1, 0, -1, -1);
+    cv::Mat corner_detector = (cv::Mat_<char> (2 * n + 1, 2 * n + 1) << -1, -1, 0, 1, 1, -1, -1, 0,
+                               1, 1, 0, 0, 0, 0, 0, 1, 1, 0, -1, -1, 1, 1, 0, -1, -1);
 
 
     int minSize = 5;
@@ -88,24 +88,24 @@ TEST (Frame, getConvolutionTest)
     {
         rows = rand () % (maxSize - minSize + 1) + minSize;
         cols = rand () % (maxSize - minSize + 1) + minSize;
-        Mat image (rows, cols, CV_8UC1);
-        randu (image, Scalar (0), Scalar (255));
+        cv::Mat image (rows, cols, CV_8UC1);
+        randu (image, cv::Scalar (0), cv::Scalar (255));
         Frame frame (image);
 
 
-        Mat temp, expected_result_corner;
+        cv::Mat temp, expected_result_corner;
         image.convertTo (temp, CV_32F);
         filter2D (temp, expected_result_corner, -1, corner_detector);
-        cv::rectangle (expected_result_corner,
-                       cv::Rect (cv::Point (0, 0), expected_result_corner.size ()), Scalar::all (0), n);
+        cv::rectangle (expected_result_corner, cv::Rect (cv::Point (0, 0), expected_result_corner.size ()),
+                       cv::Scalar::all (0), n);
         expected_result_corner.convertTo (expected_result_corner, CV_32S);
 
 
         EXPECT_TRUE (countNonZero (frame.getCornerConvolution () != expected_result_corner) == 0)
-        << image << endl
-        << endl
-        << frame.getCornerConvolution () << endl
-        << endl
+        << image << std::endl
+        << std::endl
+        << frame.getCornerConvolution () << std::endl
+        << std::endl
         << expected_result_corner;
     }
 }
@@ -127,17 +127,17 @@ TEST (Frame, suppression2DTest)
         rows = rand () % (maxSize - minSize + 1) + minSize;
         cols = rand () % (maxSize - minSize + 1) + minSize;
         k = rand () % (maxK - minK + 1) + minK;
-        Mat image (rows, cols, CV_8UC1);
-        randu (image, Scalar (0), Scalar (10));
+        cv::Mat image (rows, cols, CV_8UC1);
+        randu (image, cv::Scalar (0), cv::Scalar (10));
 
-        vector<pair<int, int>> max;
-        vector<pair<int, int>> min;
+        std::vector<std::pair<int, int>> max;
+        std::vector<std::pair<int, int>> min;
 
 
         Frame::suppression2D (k, image, max, min);
 
-        vector<pair<int, int>> expected_max;
-        vector<pair<int, int>> expected_min;
+        std::vector<std::pair<int, int>> expected_max;
+        std::vector<std::pair<int, int>> expected_min;
         bool maxFlag;
         bool minFlag;
         for (int i = k; i < image.rows - k; i++)
@@ -171,11 +171,11 @@ TEST (Frame, suppression2DTest)
 
                 if (maxFlag)
                 {
-                    expected_max.emplace_back (make_pair (i, j));
+                    expected_max.emplace_back (std::make_pair (i, j));
                 }
                 if (minFlag)
                 {
-                    expected_min.emplace_back (make_pair (i, j));
+                    expected_min.emplace_back (std::make_pair (i, j));
                 }
             }
         }
@@ -184,16 +184,16 @@ TEST (Frame, suppression2DTest)
         sort (min.begin (), min.end ());
 
         EXPECT_TRUE (expected_max == max)
-        << "expected size " << expected_max.size () << ", actual size " << max.size () << endl;
+        << "expected size " << expected_max.size () << ", actual size " << max.size () << std::endl;
         EXPECT_TRUE (expected_min == min)
-        << "expected size " << expected_min.size () << ", actual size " << min.size () << endl;
+        << "expected size " << expected_min.size () << ", actual size " << min.size () << std::endl;
     }
 }
 
 TEST (Frame, getXSobelConvolutionTest)
 {
     int n = 1;
-    Mat sobel = (Mat_<char> (2 * n + 1, 2 * n + 1) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
+    cv::Mat sobel = (cv::Mat_<char> (2 * n + 1, 2 * n + 1) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
 
 
     int minSize = 5;
@@ -205,23 +205,23 @@ TEST (Frame, getXSobelConvolutionTest)
     {
         rows = rand () % (maxSize - minSize + 1) + minSize;
         cols = rand () % (maxSize - minSize + 1) + minSize;
-        Mat image (rows, cols, CV_8UC1);
-        randu (image, Scalar (0), Scalar (255));
+        cv::Mat image (rows, cols, CV_8UC1);
+        randu (image, cv::Scalar (0), cv::Scalar (255));
         Frame frame (image);
 
-        Mat temp, expected_result;
+        cv::Mat temp, expected_result;
         image.convertTo (temp, CV_32F);
         filter2D (temp, expected_result, -1, sobel);
         cv::rectangle (expected_result, cv::Rect (cv::Point (0, 0), expected_result.size ()),
-                       Scalar::all (0), n);
+                       cv::Scalar::all (0), n);
         expected_result.convertTo (expected_result, CV_32S);
 
         EXPECT_TRUE (countNonZero (frame.getXSobelConvolution () != expected_result) == 0)
-        << "image" << endl
+        << "image" << std::endl
         << image << "\n\n"
-        << "result" << endl
+        << "result" << std::endl
         << frame.getXSobelConvolution () << "\n\n"
-        << "expected" << endl
+        << "expected" << std::endl
         << expected_result << "\n\n";
     }
 }
@@ -230,7 +230,7 @@ TEST (Frame, getXSobelConvolutionTest)
 TEST (Frame, getYSobelConvolutionTest)
 {
     int n = 1;
-    Mat sobel = (Mat_<char> (2 * n + 1, 2 * n + 1) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
+    cv::Mat sobel = (cv::Mat_<char> (2 * n + 1, 2 * n + 1) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
 
 
     int minSize = 5;
@@ -242,23 +242,23 @@ TEST (Frame, getYSobelConvolutionTest)
     {
         rows = rand () % (maxSize - minSize + 1) + minSize;
         cols = rand () % (maxSize - minSize + 1) + minSize;
-        Mat image (rows, cols, CV_8UC1);
-        randu (image, Scalar (0), Scalar (255));
+        cv::Mat image (rows, cols, CV_8UC1);
+        randu (image, cv::Scalar (0), cv::Scalar (255));
         Frame frame (image);
 
-        Mat temp, expected_result;
+        cv::Mat temp, expected_result;
         image.convertTo (temp, CV_32F);
         filter2D (temp, expected_result, -1, sobel);
         cv::rectangle (expected_result, cv::Rect (cv::Point (0, 0), expected_result.size ()),
-                       Scalar::all (0), n);
+                       cv::Scalar::all (0), n);
         expected_result.convertTo (expected_result, CV_32S);
 
         EXPECT_TRUE (countNonZero (frame.getYSobelConvolution () != expected_result) == 0)
-        << "image" << endl
+        << "image" << std::endl
         << image << "\n\n"
-        << "result" << endl
+        << "result" << std::endl
         << frame.getXSobelConvolution () << "\n\n"
-        << "expected" << endl
+        << "expected" << std::endl
         << expected_result << "\n\n";
     }
 }

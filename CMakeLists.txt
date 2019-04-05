@@ -24,7 +24,6 @@ add_library(slam ${SOURCE_FILES})
 add_executable(StereoSLAM src/main.cpp)
 target_link_libraries(StereoSLAM slam)
 
-#include_directories(${OpenCV_INCLUDE_DIRS})
 target_link_libraries(slam ${OpenCV_LIBS} )
 
 enable_testing()
