@@ -1,10 +1,8 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include <src/slam/FeatureDetector.h>
-#include <src/slam/FeaturePoint.h>
-#include <src/slam/FeatureTracker.h>
-#include <src/slam/Frame.h>
+#include <slam/Frame.h>
+#include <slam/FeatureTracker.h>
 
 using namespace std;
 using namespace cv;
@@ -44,7 +42,7 @@ int main (int argc, char *argv[])
 
     cout << ft.getCyclicallyMatchedPoints ()->size () << endl;
 
-    const int typeAmount = 4;
-    pointTypes types[typeAmount] = { BLOB_MAX, BLOB_MIN, CORNER_MAX, CORNER_MIN };
-    ft.showMP (typeAmount, types);
+//    const int typeAmount = 4;
+//    pointTypes types[typeAmount] = { BLOB_MAX, BLOB_MIN, CORNER_MAX, CORNER_MIN };
+//    ft.showMP (typeAmount, types);
 }
