@@ -1,13 +1,13 @@
 #include <gtest/gtest.h>
-using namespace std;
+#include <src/slam/Frame.h>
 
 TEST (FeatureDetection, abs)
 {
-    vector<int> SAD{ -1, 3, -45, 0, 2 };
+    std::vector<int> SAD{ -1, 3, -45, 0, 2 };
     int (*absolute) (int) = &abs;
     transform (SAD.begin (), SAD.end (), SAD.begin (), absolute);
     for (auto e : SAD)
-        cout << e << " ";
+        std::cout << e << " ";
 }
 
 

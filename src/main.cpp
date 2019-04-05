@@ -1,10 +1,10 @@
-#include "FeatureDetector.h"
-#include "FeaturePoint.h"
-#include "FeatureTracker.h"
-#include "Frame.h"
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <src/slam/FeatureDetector.h>
+#include <src/slam/FeaturePoint.h>
+#include <src/slam/FeatureTracker.h>
+#include <src/slam/Frame.h>
 
 using namespace std;
 using namespace cv;

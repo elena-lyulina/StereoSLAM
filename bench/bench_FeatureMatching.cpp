@@ -1,5 +1,5 @@
-#include "../src/FeaturePoint.h"
-#include "../src/Frame.h"
+#include "src/slam/FeaturePoint.h"
+#include "src/slam/Frame.h"
 #include <benchmark/benchmark.h>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
