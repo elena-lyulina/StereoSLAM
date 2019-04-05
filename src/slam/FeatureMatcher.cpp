@@ -32,13 +32,13 @@ int SADofDescriptors (const FeaturePoint &fp1, const FeaturePoint &fp2)
 
 
 const FeaturePoint *
-findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candidates, int areaSize)
+findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candidates, const cv::Rect &area)
 {
     int minError = SADofDescriptors (p, candidates[0]);
     const FeaturePoint *matchedPoint = &candidates[0];
     for (int i = 0; i < candidates.size (); i++)
     {
-        if (abs (candidates[i].col - p.col) <= areaSize && abs (candidates[i].row - p.row) <= areaSize)
+        if (area.contains (cv::Point (p.col, p.row)))
         {
 
             int error = SADofDescriptors (candidates[i], p);
@@ -53,32 +53,6 @@ findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candi
 
     return matchedPoint;
 }
-
-template <typename Comparator>
-const FeaturePoint *
-findMatchesOnStrip (const FeaturePoint &p, const std::vector<FeaturePoint> &candidates, int stripWidth, Comparator comp)
-{
-    int minError = SADofDescriptors (p, candidates[0]);
-    const FeaturePoint *matchedPoint = &candidates[0];
-
-    for (int i = 0; i < candidates.size (); i++)
-    {
-        if (comp (candidates[i].col, p.col) && abs (candidates[i].row - p.row) <= stripWidth)
-        {
-
-            int error = SADofDescriptors (candidates[i], p);
-
-            if (error < minError)
-            {
-                minError = error;
-                matchedPoint = &candidates[i];
-            }
-        }
-    }
-
-    return matchedPoint;
-}
-
 
 void FeatureMatcher::doMatchingCircle (
 const std::vector<FeaturePoint> &leftPred,
@@ -96,17 +70,27 @@ std::vector<std::tuple<const FeaturePoint *, const FeaturePoint *, const Feature
         // возвращать указатель или id
         // checking strip on right pred image, it should be to the right of leftPred[i]
         const FeaturePoint *rpMatchedPoint =
-        findMatchesOnStrip (leftPred[i], rightPred, stripWidth, std::less<int> ());
+        findMatchesOnArea (leftPred[i], rightPred,
+                           cv::Rect (leftPred[i].col, leftPred[i].row - stripWidth,
+                                     leftPred[i].w - leftPred[i].col, 2 * stripWidth));
 
         // checking area on right succ image
-        const FeaturePoint *rsMatchedPoint = findMatchesOnArea (*rpMatchedPoint, rightSucc, areaWidth);
+        const FeaturePoint *rsMatchedPoint =
+        findMatchesOnArea (*rpMatchedPoint, rightSucc,
+                           cv::Rect (rpMatchedPoint->col - areaWidth,
+                                     rpMatchedPoint->row - areaWidth, 2 * areaWidth, 2 * areaWidth));
 
         // checking strip on left succ image, it should be to the left of rsMatchedPoint
         const FeaturePoint *lsMatchedPoint =
-        findMatchesOnStrip (*rsMatchedPoint, leftSucc, stripWidth, std::greater<int> ());
+        findMatchesOnArea (*rsMatchedPoint, leftSucc,
+                           cv::Rect (rsMatchedPoint->col, rsMatchedPoint->row - stripWidth,
+                                     rsMatchedPoint->w - rsMatchedPoint->col, 2 * stripWidth));
 
         // checking are on left pred image
-        const FeaturePoint *lpMatchedPoint = findMatchesOnArea (*lsMatchedPoint, leftPred, areaWidth);
+        const FeaturePoint *lpMatchedPoint =
+        findMatchesOnArea (*lsMatchedPoint, leftPred,
+                           cv::Rect (lsMatchedPoint->col - areaWidth,
+                                     lsMatchedPoint->row - areaWidth, 2 * areaWidth, 2 * areaWidth));
 
         if (&leftPred[i] == lpMatchedPoint)
         {

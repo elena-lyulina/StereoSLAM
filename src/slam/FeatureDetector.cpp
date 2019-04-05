@@ -16,7 +16,7 @@ FeatureDetector::FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair
         frames[i]->suppression2D (supprArea, frames[i]->getCornerConvolution (), coord[i][2], coord[i][3]);
 
         for (int k = 0; k < TYPE_AMOUNT; k++)
-        {
+
             for (int j = 0; j < coord[i][k].size (); j++)
             {
                 detectedPoints[i][k].emplace_back (

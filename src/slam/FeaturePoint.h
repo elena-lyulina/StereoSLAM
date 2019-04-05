@@ -20,4 +20,7 @@ class FeaturePoint
 
     static const int refinementDescriptorSize = 30;
     int refinementDescriptor[refinementDescriptorSize];
+
+    const int w;
+    const int h;
 };
