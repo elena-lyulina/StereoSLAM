@@ -1,10 +1,11 @@
 #include "FeatureDetector.h"
+#include "util.h"
 
 FeatureDetector::FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair<Frame, Frame> &succFrames)
 : predFrames (&predFrames), succFrames (&succFrames)
 {
 
-    int supprArea = 5;
+    int supprArea = 2;
     Frame *frames[FRAME_AMOUNT] = { &predFrames.first, &predFrames.second, &succFrames.second,
                                     &succFrames.first };
 
@@ -26,7 +27,7 @@ FeatureDetector::FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair
         }
     }
 }
-std::vector<FeaturePoint> &FeatureDetector::getDetectedPoints (int frame, int type)
+std::vector<FeaturePoint> &FeatureDetector::getDetectedPoints (frameNumber frame, pointType type)
 {
     return detectedPoints[frame][type];
 }

@@ -201,6 +201,10 @@ cv::Mat &Frame::doYSobelConvolution (cv::Mat image, cv::Mat &result)
 template <typename Comparator>
 bool equalOrCompNotFound (int n, const cv::Mat &image, int mi, int mj, int i, int j, Comparator comp)
 {
+    // looking for max/min value into [n x n] image areas, which top left corner is represented by (i, j) coord
+    int depth = image.type() & CV_MAT_DEPTH_MASK;
+    assert(depth == CV_32S);
+
     bool geNotFound = true;
 
     for (int i2 = mi - n; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
@@ -208,8 +212,8 @@ bool equalOrCompNotFound (int n, const cv::Mat &image, int mi, int mj, int i, in
         for (int j2 = mj - n; geNotFound && j2 < j && j2 < image.cols; j2++)
         {
 
-            if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
-                image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+            if (comp (image.at<int> (i2, j2), image.at<int> (mi, mj)) ||
+                image.at<int> (i2, j2) == image.at<int> (mi, mj))
             {
                 geNotFound = false;
             }
@@ -217,8 +221,8 @@ bool equalOrCompNotFound (int n, const cv::Mat &image, int mi, int mj, int i, in
         for (int j2 = j + n + 1; geNotFound && j2 <= mj + n && j2 < image.cols; j2++)
         {
 
-            if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
-                image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+            if (comp (image.at<int> (i2, j2), image.at<int> (mi, mj)) ||
+                image.at<int> (i2, j2) == image.at<int> (mi, mj))
             {
                 geNotFound = false;
             }
@@ -230,8 +234,8 @@ bool equalOrCompNotFound (int n, const cv::Mat &image, int mi, int mj, int i, in
         for (int i2 = mi - n; geNotFound && i2 < i && i2 < image.rows; i2++)
         {
 
-            if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
-                image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+            if (comp (image.at<int> (i2, j2), image.at<int> (mi, mj)) ||
+                image.at<int> (i2, j2) == image.at<int> (mi, mj))
             {
                 geNotFound = false;
             }
@@ -240,8 +244,8 @@ bool equalOrCompNotFound (int n, const cv::Mat &image, int mi, int mj, int i, in
         for (int i2 = i + n + 1; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
         {
 
-            if (comp (image.at<uchar> (i2, j2), image.at<uchar> (mi, mj)) ||
-                image.at<uchar> (i2, j2) == image.at<uchar> (mi, mj))
+            if (comp (image.at<int> (i2, j2), image.at<int> (mi, mj)) ||
+                image.at<int> (i2, j2) == image.at<int> (mi, mj))
             {
                 geNotFound = false;
             }
@@ -251,14 +255,17 @@ bool equalOrCompNotFound (int n, const cv::Mat &image, int mi, int mj, int i, in
     return geNotFound;
 }
 
+
+// currently only for <int> images !!
 void Frame::suppression2D (int n,
                            const cv::Mat &image,
                            std::vector<std::pair<int, int>> &maxResult,
                            std::vector<std::pair<int, int>> &minResult)
 {
-
-
     // looking for max/min value into [n x n] image areas, which top left corner is represented by (i, j) coord
+    int depth = image.type() & CV_MAT_DEPTH_MASK;
+    assert(depth == CV_32S);
+
     for (int i = n; i < image.rows - n; i += n + 1)
     {
         for (int j = n; j < image.cols - n; j += n + 1)
@@ -278,26 +285,26 @@ void Frame::suppression2D (int n,
                 for (int j2 = j; j2 <= j + n; j2++)
                 {
 
-                    if (image.at<uchar> (i2, j2) > image.at<uchar> (maxi, maxj))
+                    if (image.at<int> (i2, j2) > image.at<int> (maxi, maxj))
                     {
 
                         equalMaxFound = false;
                         maxi = i2;
                         maxj = j2;
                     }
-                    else if (image.at<uchar> (i2, j2) == image.at<uchar> (maxi, maxj) &&
+                    else if (image.at<int> (i2, j2) == image.at<int> (maxi, maxj) &&
                              (i2 != maxi || j2 != maxj))
                     {
                         equalMaxFound = true;
                     }
 
-                    if (image.at<uchar> (i2, j2) < image.at<uchar> (mini, minj))
+                    if (image.at<int> (i2, j2) < image.at<int> (mini, minj))
                     {
                         equalMinFound = false;
                         mini = i2;
                         minj = j2;
                     }
-                    else if (image.at<uchar> (i2, j2) == image.at<uchar> (mini, minj) &&
+                    else if (image.at<int> (i2, j2) == image.at<int> (mini, minj) &&
                              (i2 != mini || j2 != minj))
                     {
                         equalMinFound = true;

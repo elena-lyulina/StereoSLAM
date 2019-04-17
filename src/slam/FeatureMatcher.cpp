@@ -34,24 +34,26 @@ int SADofDescriptors (const FeaturePoint &fp1, const FeaturePoint &fp2)
 const FeaturePoint *
 findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candidates, const cv::Rect &area)
 {
-    int minError = SADofDescriptors (p, candidates[0]);
-    const FeaturePoint *matchedPoint = &candidates[0];
-    for (int i = 0; i < candidates.size (); i++)
-    {
-        if (area.contains (cv::Point (p.col, p.row)))
-        {
+//    int minError = SADofDescriptors (p, candidates[0]);
+//    const FeaturePoint *matchedPoint = &candidates[0];
+//    for (int i = 0; i < candidates.size (); i++)
+//    {
+//        if (area.contains (cv::Point (p.col, p.row)))
+//        {
+//
+//            int error = SADofDescriptors (candidates[i], p);
+//
+//            if (error < minError)
+//            {
+//                minError = error;
+//                matchedPoint = &candidates[i];
+//            }
+//        }
+//    }
+//
+//    return matchedPoint;
 
-            int error = SADofDescriptors (candidates[i], p);
-
-            if (error < minError)
-            {
-                minError = error;
-                matchedPoint = &candidates[i];
-            }
-        }
-    }
-
-    return matchedPoint;
+      return &candidates[0];
 }
 
 void FeatureMatcher::doMatchingCircle (
@@ -99,7 +101,7 @@ std::vector<std::tuple<const FeaturePoint *, const FeaturePoint *, const Feature
     }
 }
 
-std::vector<fp_tuple> FeatureMatcher::getMatchedPoints (int type)
+std::vector<fp_tuple> FeatureMatcher::getMatchedPoints (pointType type)
 {
     return matchedPoints[type];
 }

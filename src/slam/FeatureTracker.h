@@ -14,7 +14,7 @@ class FeatureTracker
 
     void handleNextFrames (std::pair<Frame, Frame> &frames);
     std::vector<fp_tuple> *getCyclicallyMatchedPoints ();
-    void showMP (int typeAmount, pointTypes types[]);
+    void showMP (int typeAmount, pointType types[]);
 
     private:
     std::pair<Frame, Frame> *predFrames;
@@ -23,6 +23,6 @@ class FeatureTracker
     FeatureDetector fd;
     FeatureMatcher fm;
 
-    void showMPOnImages (cv::Mat *imagesRGB, int type);
+    void showMPOnImages (cv::Mat *imagesRGB, pointType type);
     void getImagesRGB (cv::Mat *imagesRGB);
 };

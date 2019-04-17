@@ -32,7 +32,7 @@ void FeatureTracker::getImagesRGB (cv::Mat *imagesRGB)
 }
 
 
-void FeatureTracker::showMPOnImages (cv::Mat *imagesRGB, int type)
+void FeatureTracker::showMPOnImages (cv::Mat *imagesRGB, pointType type)
 {
     std::vector<fp_tuple> *points = getCyclicallyMatchedPoints ();
     cv::RNG rng (12345);
@@ -64,7 +64,7 @@ void FeatureTracker::showMPOnImages (cv::Mat *imagesRGB, int type)
     cv::waitKey ();
 }
 
-void FeatureTracker::showMP (int typeAmount, pointTypes types[])
+void FeatureTracker::showMP (int typeAmount, pointType types[])
 {
     cv::Mat imagesRGB[FRAME_AMOUNT];
     getImagesRGB (imagesRGB);

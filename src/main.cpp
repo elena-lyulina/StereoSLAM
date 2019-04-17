@@ -42,7 +42,6 @@ int main (int argc, char *argv[])
 
     cout << ft.getCyclicallyMatchedPoints ()->size () << endl;
 
-//    const int typeAmount = 4;
-//    pointTypes types[typeAmount] = { BLOB_MAX, BLOB_MIN, CORNER_MAX, CORNER_MIN };
-//    ft.showMP (typeAmount, types);
+    pointType types[TYPE_AMOUNT] = { BLOB_MAX, BLOB_MIN, CORNER_MAX, CORNER_MIN };
+    ft.showMP (TYPE_AMOUNT, types);
 }

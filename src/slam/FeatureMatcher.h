@@ -11,7 +11,7 @@ class FeatureMatcher
 {
     public:
     FeatureMatcher (FeatureDetector &fd);
-    std::vector<fp_tuple> getMatchedPoints (int type);
+    std::vector<fp_tuple> getMatchedPoints (pointType type);
     std::vector<fp_tuple> *getMatchedPointsAllTypes ();
 
 

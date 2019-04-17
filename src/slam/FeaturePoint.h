@@ -1,6 +1,6 @@
 #pragma once
-
 #include "Frame.h"
+#include "util.h"
 
 class FeaturePoint
 {
@@ -10,7 +10,7 @@ class FeaturePoint
     int age;
     int currentPosition;
     int featureStrength;
-    int clazz;
+    pointType clazz;
     int row;
     int col;
     Frame &frame;
