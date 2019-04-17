@@ -12,8 +12,8 @@ Frame::Frame (cv::Mat &img)
   cornerConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S))
 {
     fillSum ();
-    doXSobelConvolution (image, xSobel);
-    doYSobelConvolution (image, ySobel);
+    doXSobelConvolution (image, xSobel, SS_3);
+    doYSobelConvolution (image, ySobel, SS_3);
     doBlobConvolution (blobConvolution);
     doCornerConvolution (cornerConvolution);
 }
@@ -150,50 +150,136 @@ const cv::Mat &Frame::getCornerConvolution ()
     return cornerConvolution;
 }
 
-cv::Mat &Frame::doXSobelConvolution (cv::Mat image, cv::Mat &result)
+
+cv::Mat &Frame::doXSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size)
 {
-    // x Sobel kernel
-    // -1 0 1     [1]
-    // -2 0 2  =  [2] * [-1, 0, 1]
-    // -1 0 1     [1]
+    const int w = image.cols, h = image.rows;
+
+    cv::Mat image32;
+    image.convertTo (image32, CV_32S);
+    result.convertTo (result, CV_32S);
+
+    switch (size)
+    {
+    case SS_3:
+    {
+        // 3x3 x-Sobel kernel:
+        //   -1  0  1     [1]
+        //   -2  0  2  =  [2] * [-1, 0, 1]
+        //   -1  0  1     [1]
+
+        assert (w >= 3 && h >= 3);
+
+        cv::Mat rowMult (h, w, CV_32S, cv::Scalar::all (0));
+
+        rowMult (cv::Rect (0, 1, w, h - 2)) = image32 (cv::Rect (0, 0, w, h - 2)) +
+                                              2 * image32 (cv::Rect (0, 1, w, h - 2)) +
+                                              image32 (cv::Rect (0, 2, w, h - 2));
+
+        result (cv::Rect (1, 1, w - 2, h - 2)) =
+        -rowMult (cv::Rect (0, 1, w - 2, h - 2)) + rowMult (cv::Rect (2, 1, w - 2, h - 2));
+        break;
+    }
+    case SS_5:
+    {
+        // 5x5 x-Sobel kernel:
+        //   -5  -4   0  4   5      [5 ]                       [4 ]
+        //   -8  -10  0  10  8      [8 ]                       [10]
+        //   -10 -20  0  20  10  =  [10] * [-1, 0, 0, 0, 1] +  [20] * [0, -1, 0, 1, 0]
+        //   -8  -10  0  10  8      [8 ]                       [10]
+        //   -5  -4   0  4   5      [5 ]                       [4 ]
+
+        assert (w >= 5 && h >= 5);
+
+        cv::Mat rowMult1 (h, w, CV_32S, cv::Scalar::all (0));
+        cv::Mat rowMult2 (h, w, CV_32S, cv::Scalar::all (0));
+
+        rowMult1 (cv::Rect (0, 2, w, h - 4)) =
+        5 * image32 (cv::Rect (0, 0, w, h - 4)) + 8 * image32 (cv::Rect (0, 1, w, h - 4)) +
+        10 * image32 (cv::Rect (0, 2, w, h - 4)) + 8 * image32 (cv::Rect (0, 3, w, h - 4)) +
+        5 * image32 (cv::Rect (0, 4, w, h - 4));
 
 
-    cv::Mat rowMult (result.rows, result.cols, CV_32S, cv::Scalar::all (0));
-    cv::Mat temp;
-    image.convertTo (temp, CV_32S);
+        rowMult2 (cv::Rect (1, 2, w - 2, h - 4)) =
+        4 * image32 (cv::Rect (1, 0, w - 2, h - 4)) + 10 * image32 (cv::Rect (1, 1, w - 2, h - 4)) +
+        20 * image32 (cv::Rect (1, 2, w - 2, h - 4)) +
+        10 * image32 (cv::Rect (1, 3, w - 2, h - 4)) + 4 * image32 (cv::Rect (1, 4, w - 2, h - 4));
 
-    const int w = temp.cols, h = temp.rows;
 
-    rowMult (cv::Rect (0, 1, w, h - 2)) = temp (cv::Rect (0, 0, w, h - 2)) +
-                                          2 * temp (cv::Rect (0, 1, w, h - 2)) +
-                                          temp (cv::Rect (0, 2, w, h - 2));
+        result (cv::Rect (2, 2, w - 4, h - 4)) =
+        -rowMult1 (cv::Rect (0, 2, w - 4, h - 4)) - rowMult2 (cv::Rect (1, 2, w - 4, h - 4)) +
+        rowMult2 (cv::Rect (3, 2, w - 4, h - 4)) + rowMult1 (cv::Rect (4, 2, w - 4, h - 4));
+        break;
+    }
+    }
 
-    result (cv::Rect (1, 1, w - 2, h - 2)) =
-    -rowMult (cv::Rect (0, 1, w - 2, h - 2)) + rowMult (cv::Rect (2, 1, w - 2, h - 2));
 
     return result;
 }
 
-cv::Mat &Frame::doYSobelConvolution (cv::Mat image, cv::Mat &result)
+cv::Mat &Frame::doYSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size)
 {
-    // y Sobel kernel
-    //  1  2  1     [1]
-    //  0  0  0  =  [0] * [1, 2, 1]
-    // -1 -2 -1     [-1]
+    const int w = image.cols, h = image.rows;
+
+    cv::Mat image32;
+    image.convertTo (image32, CV_32S);
+    result.convertTo (result, CV_32S);
+
+    switch (size)
+    {
+    case SS_3:
+    {
+        // 3x3 y-Sobel kernel:
+        //    1  2  1     [1]
+        //    0  0  0  =  [0] * [1, 2, 1]
+        //   -1 -2 -1     [-1]
+
+        assert (w >= 3 && h >= 3);
+
+        cv::Mat rowMult (result.rows, result.cols, CV_32S, cv::Scalar::all (0));
+
+        rowMult (cv::Rect (0, 1, w, h - 2)) =
+        image32 (cv::Rect (0, 0, w, h - 2)) - image32 (cv::Rect (0, 2, w, h - 2));
+
+        result (cv::Rect (1, 1, w - 2, h - 2)) = rowMult (cv::Rect (0, 1, w - 2, h - 2)) +
+                                                 2 * rowMult (cv::Rect (1, 1, w - 2, h - 2)) +
+                                                 rowMult (cv::Rect (2, 1, w - 2, h - 2));
+        break;
+    }
+    case SS_5:
+    {
+        // 5x5 y-Sobel kernel:
+        //   -5  -8   -10  -8  -5      [-1]                       [ 0]
+        //   -4  -10  -20  -10 -4      [ 0]                       [-1]
+        //    0   0    0    0   0  =   [ 0] * [5, 8, 10, 8, 5] +  [ 0] * [4, 10, 20, 10, 4]
+        //    4   10   20   10  4      [ 0]                       [ 1]
+        //    5   8    10   8   5      [ 1]                       [ 0]
+
+        assert (w >= 5 && h >= 5);
+
+        cv::Mat rowMult1 (h, w, CV_32S, cv::Scalar::all (0));
+        cv::Mat rowMult2 (h, w, CV_32S, cv::Scalar::all (0));
+
+        rowMult1 (cv::Rect (2, 0, w - 4, h)) =
+        5 * image32 (cv::Rect (0, 0, w - 4, h)) + 8 * image32 (cv::Rect (1, 0, w - 4, h)) +
+        10 * image32 (cv::Rect (2, 0, w - 4, h)) + 8 * image32 (cv::Rect (3, 0, w - 4, h)) +
+        5 * image32 (cv::Rect (4, 0, w - 4, h));
 
 
-    cv::Mat rowMult (result.rows, result.cols, CV_32S, cv::Scalar::all (0));
-    cv::Mat temp;
-    image.convertTo (temp, CV_32S);
+        rowMult2 (cv::Rect (2, 1, w - 4, h - 2)) =
+        4 * image32 (cv::Rect (0, 1, w - 4, h - 2)) + 10 * image32 (cv::Rect (1, 1, w - 4, h - 2)) +
+        20 * image32 (cv::Rect (2, 1, w - 4, h - 2)) +
+        10 * image32 (cv::Rect (3, 1, w - 4, h - 2)) + 4 * image32 (cv::Rect (4, 1, w - 4, h - 2));
 
-    const int w = temp.cols, h = temp.rows;
 
-    rowMult (cv::Rect (0, 1, w, h - 2)) =
-    temp (cv::Rect (0, 0, w, h - 2)) - temp (cv::Rect (0, 2, w, h - 2));
+        result (cv::Rect (2, 2, w - 4, h - 4)) =
+        -rowMult1 (cv::Rect (2, 0, w - 4, h - 4)) - rowMult2 (cv::Rect (2, 1, w - 4, h - 4)) +
+        rowMult2 (cv::Rect (2, 3, w - 4, h - 4)) + rowMult1 (cv::Rect (2, 4, w - 4, h - 4));
 
-    result (cv::Rect (1, 1, w - 2, h - 2)) = rowMult (cv::Rect (0, 1, w - 2, h - 2)) +
-                                             2 * rowMult (cv::Rect (1, 1, w - 2, h - 2)) +
-                                             rowMult (cv::Rect (2, 1, w - 2, h - 2));
+        break;
+    }
+    }
+
 
     return result;
 }
@@ -203,60 +289,60 @@ bool equalOrCompNotFound (int n, const cv::Mat &image, int mi, int mj, int i, in
 {
     // looking for max/min value into [n x n] image areas, which top left corner is represented by (i, j) coord
     int depth = image.type () & CV_MAT_DEPTH_MASK;
-    assert (depth == CV_32S);
+    assert (depth == CV_32S); // only for <int> images
 
-    bool geNotFound = true;
+    bool ecNotFound = true;
 
-    for (int i2 = mi - n; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
+    for (int i2 = mi - n; ecNotFound && i2 <= mi + n && i2 < image.rows; i2++)
     {
-        for (int j2 = mj - n; geNotFound && j2 < j && j2 < image.cols; j2++)
+        for (int j2 = mj - n; ecNotFound && j2 < j && j2 < image.cols; j2++)
         {
 
             if (comp (image.at<int> (i2, j2), image.at<int> (mi, mj)) ||
                 image.at<int> (i2, j2) == image.at<int> (mi, mj))
             {
-                geNotFound = false;
+                ecNotFound = false;
             }
         }
-        for (int j2 = j + n + 1; geNotFound && j2 <= mj + n && j2 < image.cols; j2++)
+        for (int j2 = j + n + 1; ecNotFound && j2 <= mj + n && j2 < image.cols; j2++)
         {
 
             if (comp (image.at<int> (i2, j2), image.at<int> (mi, mj)) ||
                 image.at<int> (i2, j2) == image.at<int> (mi, mj))
             {
-                geNotFound = false;
+                ecNotFound = false;
             }
         }
     }
 
-    for (int j2 = j; geNotFound && j2 <= j + n && j2 < image.cols; j2++)
+    for (int j2 = j; ecNotFound && j2 <= j + n && j2 < image.cols; j2++)
     {
-        for (int i2 = mi - n; geNotFound && i2 < i && i2 < image.rows; i2++)
+        for (int i2 = mi - n; ecNotFound && i2 < i && i2 < image.rows; i2++)
         {
 
             if (comp (image.at<int> (i2, j2), image.at<int> (mi, mj)) ||
                 image.at<int> (i2, j2) == image.at<int> (mi, mj))
             {
-                geNotFound = false;
+                ecNotFound = false;
             }
         }
 
-        for (int i2 = i + n + 1; geNotFound && i2 <= mi + n && i2 < image.rows; i2++)
+        for (int i2 = i + n + 1; ecNotFound && i2 <= mi + n && i2 < image.rows; i2++)
         {
 
             if (comp (image.at<int> (i2, j2), image.at<int> (mi, mj)) ||
                 image.at<int> (i2, j2) == image.at<int> (mi, mj))
             {
-                geNotFound = false;
+                ecNotFound = false;
             }
         }
     }
 
-    return geNotFound;
+    return ecNotFound;
 }
 
 
-// currently only for <int> images !!
+// currently only for <int> images
 void Frame::suppression2D (int n,
                            const cv::Mat &image,
                            std::vector<std::pair<int, int>> &maxResult,
@@ -264,7 +350,7 @@ void Frame::suppression2D (int n,
 {
     // looking for max/min value into [n x n] image areas, which top left corner is represented by (i, j) coord
     int depth = image.type () & CV_MAT_DEPTH_MASK;
-    assert (depth == CV_32S);
+    assert (depth == CV_32S); // only for <int> images
 
     for (int i = n; i < image.rows - n; i += n + 1)
     {

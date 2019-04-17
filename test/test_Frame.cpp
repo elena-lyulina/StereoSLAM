@@ -147,6 +147,8 @@ TEST (Frame, withVSwithoutSaturation)
         filter2D (image, withSaturation_result, -1, blob_detector);
         rectangle (withSaturation_result, Rect (Point (0, 0), withSaturation_result.size ()),
                    Scalar::all (0), n);
+        withSaturation_result.convertTo (withSaturation_result, CV_32S);
+
 
         Frame::suppression2D (area, withoutSaturation_result, maxWithoutSat, minWithoutSat);
         Frame::suppression2D (area, withSaturation_result, maxWithSat, minWithSat);
@@ -239,15 +241,23 @@ TEST (Frame, suppression2DTest)
     }
 }
 
-TEST (Frame, getXSobelConvolutionTest)
+TEST (Frame, doXSobelConvolutionTest)
 {
-    int n = 1;
-    Mat sobel = (Mat_<char> (2 * n + 1, 2 * n + 1) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
+    int n3 = 1;
+    Mat sobel3 = (Mat_<char> (2 * n3 + 1, 2 * n3 + 1) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
+    int n5 = 2;
+    Mat sobel5 = (Mat_<char> (2 * n5 + 1, 2 * n5 + 1) << -5, -4, 0, 4, 5, -8, -10, 0, 10, 8, -10,
+                  -20, 0, 20, 10, -8, -10, 0, 10, 8, -5, -4, 0, 4, 5);
 
+
+    const int n = 2;
+    Mat sobels[n] = { sobel3, sobel5 };
+    int ns[n] = { n3, n5 };
+    Frame::sobelSize ss[n] = { Frame::SS_3, Frame::SS_5 };
 
     int minSize = 5;
     int maxSize = 1000;
-    int times = 1000;
+    int times = 10000;
     int rows, cols;
 
     for (int i = 0; i < times; i++)
@@ -256,29 +266,44 @@ TEST (Frame, getXSobelConvolutionTest)
         cols = rand () % (maxSize - minSize + 1) + minSize;
         Mat image (rows, cols, CV_8UC1);
         randu (image, Scalar (0), Scalar (255));
-        Frame frame (image);
 
-        Mat temp, expected_result;
-        image.convertTo (temp, CV_32F);
-        filter2D (temp, expected_result, -1, sobel);
-        rectangle (expected_result, Rect (Point (0, 0), expected_result.size ()), Scalar::all (0), n);
-        expected_result.convertTo (expected_result, CV_32S);
 
-        EXPECT_TRUE (countNonZero (frame.getXSobelConvolution () != expected_result) == 0)
-        << "image" << endl
-        << image << "\n\n"
-        << "result" << endl
-        << frame.getXSobelConvolution () << "\n\n"
-        << "expected" << endl
-        << expected_result << "\n\n";
+        for (int j = 0; j < n; j++)
+        {
+
+            Mat temp, expected_result;
+            Mat result (rows, cols, CV_32S, Scalar::all (0));
+            image.convertTo (temp, CV_32F);
+
+            filter2D (temp, expected_result, -1, sobels[j]);
+            rectangle (expected_result, Rect (Point (0, 0), expected_result.size ()), Scalar::all (0), ns[j]);
+            expected_result.convertTo (expected_result, CV_32S);
+
+            EXPECT_TRUE (countNonZero (Frame::doXSobelConvolution (image, result, ss[j]) != expected_result) == 0)
+            << "image" << endl
+            << image << "\n\n"
+            << "result" << endl
+            << result << "\n\n"
+            << "expected" << endl
+            << expected_result << "\n\n";
+        }
     }
 }
 
 
-TEST (Frame, getYSobelConvolutionTest)
+TEST (Frame, doYSobelConvolutionTest)
 {
-    int n = 1;
-    Mat sobel = (Mat_<char> (2 * n + 1, 2 * n + 1) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
+    int n3 = 1;
+    Mat sobel3 = (Mat_<char> (2 * n3 + 1, 2 * n3 + 1) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
+
+    int n5 = 2;
+    Mat sobel5 = (Mat_<char> (2 * n5 + 1, 2 * n5 + 1) << -5, -8, -10, -8, -5, -4, -10, -20, -10, -4,
+                  0, 0, 0, 0, 0, 4, 10, 20, 10, 4, 5, 8, 10, 8, 5);
+
+    const int n = 2;
+    Mat sobels[n] = { sobel3, sobel5 };
+    int ns[n] = { n3, n5 };
+    Frame::sobelSize ss[n] = { Frame::SS_3, Frame::SS_5 };
 
 
     int minSize = 5;
@@ -292,21 +317,26 @@ TEST (Frame, getYSobelConvolutionTest)
         cols = rand () % (maxSize - minSize + 1) + minSize;
         Mat image (rows, cols, CV_8UC1);
         randu (image, Scalar (0), Scalar (255));
-        Frame frame (image);
 
-        Mat temp, expected_result;
-        image.convertTo (temp, CV_32F);
-        filter2D (temp, expected_result, -1, sobel);
-        rectangle (expected_result, Rect (Point (0, 0), expected_result.size ()), Scalar::all (0), n);
-        expected_result.convertTo (expected_result, CV_32S);
+        for (int j = 0; j < n; j++)
+        {
 
-        EXPECT_TRUE (countNonZero (frame.getYSobelConvolution () != expected_result) == 0)
-        << "image" << endl
-        << image << "\n\n"
-        << "result" << endl
-        << frame.getXSobelConvolution () << "\n\n"
-        << "expected" << endl
-        << expected_result << "\n\n";
+            Mat temp, expected_result;
+            Mat result (rows, cols, CV_32S, Scalar::all (0));
+            image.convertTo (temp, CV_32F);
+
+            filter2D (temp, expected_result, -1, sobels[j]);
+            rectangle (expected_result, Rect (Point (0, 0), expected_result.size ()), Scalar::all (0), ns[j]);
+            expected_result.convertTo (expected_result, CV_32S);
+
+            EXPECT_TRUE (countNonZero (Frame::doYSobelConvolution (image, result, ss[j]) != expected_result) == 0)
+            << "image" << endl
+            << image << "\n\n"
+            << "result" << endl
+            << result << "\n\n"
+            << "expected" << endl
+            << expected_result << "\n\n";
+        }
     }
 }
 

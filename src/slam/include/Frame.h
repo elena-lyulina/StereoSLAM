@@ -15,8 +15,16 @@ class Frame
     const cv::Mat &getBlobConvolution ();
     const cv::Mat &getCornerConvolution ();
 
-    static cv::Mat &doXSobelConvolution (cv::Mat image, cv::Mat &result);
-    static cv::Mat &doYSobelConvolution (cv::Mat image, cv::Mat &result);
+    enum sobelSize
+    {
+        SS_3 = 3,
+        SS_5 = 5
+    };
+
+    static cv::Mat &doXSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size);
+    static cv::Mat &doYSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size);
+
+
     int rectSum (int x, int y, int width, int height);
 
     cv::Mat &doBlobConvolution (cv::Mat &result);
