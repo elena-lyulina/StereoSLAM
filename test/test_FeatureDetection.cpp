@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include <Frame.h>
+#include <gtest/gtest.h>
 
 TEST (FeatureDetection, abs)
 {

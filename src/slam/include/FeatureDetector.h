@@ -1,9 +1,8 @@
 #pragma once
 #include <FeaturePoint.h>
-#include <util.h>
 #include <iostream>
 #include <opencv2/imgproc.hpp>
-
+#include <util.h>
 
 
 class FeatureDetector

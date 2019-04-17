@@ -202,8 +202,8 @@ template <typename Comparator>
 bool equalOrCompNotFound (int n, const cv::Mat &image, int mi, int mj, int i, int j, Comparator comp)
 {
     // looking for max/min value into [n x n] image areas, which top left corner is represented by (i, j) coord
-    int depth = image.type() & CV_MAT_DEPTH_MASK;
-    assert(depth == CV_32S);
+    int depth = image.type () & CV_MAT_DEPTH_MASK;
+    assert (depth == CV_32S);
 
     bool geNotFound = true;
 
@@ -263,8 +263,8 @@ void Frame::suppression2D (int n,
                            std::vector<std::pair<int, int>> &minResult)
 {
     // looking for max/min value into [n x n] image areas, which top left corner is represented by (i, j) coord
-    int depth = image.type() & CV_MAT_DEPTH_MASK;
-    assert(depth == CV_32S);
+    int depth = image.type () & CV_MAT_DEPTH_MASK;
+    assert (depth == CV_32S);
 
     for (int i = n; i < image.rows - n; i += n + 1)
     {
@@ -292,8 +292,7 @@ void Frame::suppression2D (int n,
                         maxi = i2;
                         maxj = j2;
                     }
-                    else if (image.at<int> (i2, j2) == image.at<int> (maxi, maxj) &&
-                             (i2 != maxi || j2 != maxj))
+                    else if (image.at<int> (i2, j2) == image.at<int> (maxi, maxj) && (i2 != maxi || j2 != maxj))
                     {
                         equalMaxFound = true;
                     }
@@ -304,8 +303,7 @@ void Frame::suppression2D (int n,
                         mini = i2;
                         minj = j2;
                     }
-                    else if (image.at<int> (i2, j2) == image.at<int> (mini, minj) &&
-                             (i2 != mini || j2 != minj))
+                    else if (image.at<int> (i2, j2) == image.at<int> (mini, minj) && (i2 != mini || j2 != minj))
                     {
                         equalMinFound = true;
                     }

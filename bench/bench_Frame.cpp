@@ -1,8 +1,8 @@
+#include <Frame.h>
 #include <benchmark/benchmark.h>
 #include <memory>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
-#include <Frame.h>
 
 
 class SuppressionFixture : public benchmark::Fixture
