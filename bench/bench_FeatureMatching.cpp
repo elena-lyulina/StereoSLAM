@@ -1,8 +1,8 @@
 #include <benchmark/benchmark.h>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
-#include <src/slam/FeaturePoint.h>
-#include <src/slam/Frame.h>
+#include <FeaturePoint.h>
+#include <Frame.h>
 
 
 // static void CustomArguments(benchmark::internal::Benchmark* b) {

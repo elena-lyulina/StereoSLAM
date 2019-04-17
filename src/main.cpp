@@ -1,8 +1,8 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include <slam/Frame.h>
-#include <slam/FeatureTracker.h>
+#include <Frame.h>
+#include <FeatureTracker.h>
 
 using namespace std;
 using namespace cv;

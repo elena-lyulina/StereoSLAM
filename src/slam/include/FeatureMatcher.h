@@ -1,7 +1,7 @@
 #pragma once
 
-#include "FeatureDetector.h"
-#include "FeaturePoint.h"
+#include <FeatureDetector.h>
+#include <FeaturePoint.h>
 #include <iostream>
 #include <opencv2/imgproc.hpp>
 

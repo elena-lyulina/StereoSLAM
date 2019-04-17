@@ -1,5 +1,5 @@
-#include "FeatureDetector.h"
-#include "util.h"
+#include <FeatureDetector.h>
+#include <util.h>
 
 FeatureDetector::FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair<Frame, Frame> &succFrames)
 : predFrames (&predFrames), succFrames (&succFrames)

@@ -1,4 +1,4 @@
-#include "FeaturePoint.h"
+#include <FeaturePoint.h>
 
 FeaturePoint::FeaturePoint (Frame &frame, int row, int col)
 : row (row), col (col), frame (frame), w (frame.getImage ().cols), h (frame.getImage ().rows)

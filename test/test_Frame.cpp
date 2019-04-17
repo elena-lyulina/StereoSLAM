@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <opencv2/imgproc.hpp>
-#include <src/slam/Frame.h>
+#include <Frame.h>
 
 using namespace std;
 using namespace cv;

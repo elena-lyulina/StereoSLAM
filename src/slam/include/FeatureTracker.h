@@ -1,8 +1,8 @@
 #pragma once
 
-#include "FeatureDetector.h"
-#include "FeatureMatcher.h"
-#include "Frame.h"
+#include <src/slam/include/FeatureDetector.h>
+#include <src/slam/include/FeatureMatcher.h>
+#include <Frame.h>
 
 
 class FeatureTracker
