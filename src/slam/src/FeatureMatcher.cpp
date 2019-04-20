@@ -62,12 +62,11 @@ const std::vector<FeaturePoint> &leftSucc,
 std::vector<std::tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, const FeaturePoint *>> &matched)
 {
 
-    int stripWidth = 10;
+    int stripWidth = 1;
     int areaWidth = 50;
 
     for (int i = 0; i < leftPred.size (); i++)
     {
-        // возвращать указатель или id
         // checking strip on right pred image, it should be to the right of leftPred[i]
         const FeaturePoint *rpMatchedPoint =
         findMatchesOnArea (leftPred[i], rightPred,

@@ -5,7 +5,7 @@ FeatureDetector::FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair
 : predFrames (&predFrames), succFrames (&succFrames)
 {
 
-    int supprArea = 2;
+    int supprArea = 5;
     Frame *frames[FRAME_AMOUNT] = { &predFrames.first, &predFrames.second, &succFrames.second,
                                     &succFrames.first };
 

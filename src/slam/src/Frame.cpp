@@ -12,8 +12,8 @@ Frame::Frame (cv::Mat &img)
   cornerConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S))
 {
     fillSum ();
-    doXSobelConvolution (image, xSobel, SS_3);
-    doYSobelConvolution (image, ySobel, SS_3);
+    doXSobelConvolution (image, xSobel, SS_5);
+    doYSobelConvolution (image, ySobel, SS_5);
     doBlobConvolution (blobConvolution);
     doCornerConvolution (cornerConvolution);
 }
