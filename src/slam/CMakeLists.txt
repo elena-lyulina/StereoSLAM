@@ -1,3 +1,4 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(SOURCE_FILES src/Frame.cpp src/FeatureDetector.cpp src/FeaturePoint.cpp src/FeatureMatcher.cpp src/FeatureTracker.cpp)
 add_library(slam ${SOURCE_FILES})
 

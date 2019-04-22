@@ -2,6 +2,7 @@
 
 #include <FeatureDetector.h>
 #include <FeaturePoint.h>
+#include <immintrin.h>
 #include <iostream>
 #include <opencv2/imgproc.hpp>
 
@@ -13,7 +14,10 @@ class FeatureMatcher
     FeatureMatcher (FeatureDetector &fd);
     std::vector<fp_tuple> getMatchedPoints (pointType type);
     std::vector<fp_tuple> *getMatchedPointsAllTypes ();
-
+    static int SAD_8x48 (uint8_t (&arr1)[FeaturePoint::mdSize], uint8_t (&arr2)[FeaturePoint::mdSize]);
+    static int SAD_32x48 (const int32_t (&arr1)[FeaturePoint::mdSize],
+                          const int32_t (&arr2)[FeaturePoint::mdSize]);
+    static int SAD_32x8 (__m256i a1, __m256i a2);
 
     private:
     static void doMatchingCircle (const std::vector<FeaturePoint> &leftPred,

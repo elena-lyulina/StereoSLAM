@@ -1,8 +1,10 @@
 #include <FeaturePoint.h>
 #include <Frame.h>
 #include <benchmark/benchmark.h>
+#include <immintrin.h>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
+#include <random>
 
 
 // static void CustomArguments(benchmark::internal::Benchmark* b) {
@@ -48,7 +50,7 @@ static void BM_FeatureMatching (benchmark::State &state)
     }
 }
 
-BENCHMARK (BM_FeatureMatching);
+// BENCHMARK (BM_FeatureMatching);
 
 
 BENCHMARK_MAIN ();
