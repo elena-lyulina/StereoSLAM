@@ -1,5 +1,6 @@
 #include <FeatureMatcher.h>
 #include <FeaturePoint.h>
+#include <FeatureTracker.h>
 #include <Frame.h>
 #include <benchmark/benchmark.h>
 #include <immintrin.h>
@@ -82,5 +83,6 @@ BENCHMARK_DEFINE_F (SAD_8_Fixture, BM_SAD_8) (benchmark::State &state)
 }
 
 BENCHMARK_REGISTER_F (SAD_8_Fixture, BM_SAD_8);
+
 
 BENCHMARK_MAIN ();

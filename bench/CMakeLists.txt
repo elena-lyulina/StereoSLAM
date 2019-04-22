@@ -1,5 +1,5 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCMAKE_BUILD_TYPE=Release -march=native")
-set(BENCHMARKS bench_FeatureMatcher bench_Frame)
+set(BENCHMARKS bench_FeatureMatcher bench_Frame bench_FeatureTracker)
 add_definitions(-DPATH_TO_IMG="/home/elena/workspaces/c++/StereoSLAM/res/lp.png")
 
 foreach(CUR_BENCH ${BENCHMARKS})
