@@ -16,10 +16,10 @@ class FeaturePoint
     Frame &frame;
 
     static const int mdSize = 48;
-    alignas (32) int32_t matchingDescriptor[mdSize];
+    alignas (32) uint8_t matchingDescriptor[mdSize];
 
     static const int rdSize = 30;
-    alignas (32) int32_t refinementDescriptor[rdSize];
+    alignas (32) uint8_t refinementDescriptor[rdSize];
 
     const int w;
     const int h;

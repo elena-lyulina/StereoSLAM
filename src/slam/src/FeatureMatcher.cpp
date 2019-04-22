@@ -63,7 +63,8 @@ int FeatureMatcher::SAD_32x48 (const int32_t (&arr1)[FeaturePoint::mdSize],
            SAD_32x8 (e1, e2) + SAD_32x8 (f1, f2);
 }
 
-int FeatureMatcher::SAD_8x48 (uint8_t (&arr1)[FeaturePoint::mdSize], uint8_t (&arr2)[FeaturePoint::mdSize])
+int FeatureMatcher::SAD_8x48 (const uint8_t (&arr1)[FeaturePoint::mdSize],
+                              const uint8_t (&arr2)[FeaturePoint::mdSize])
 {
 
     // first 32 of 48
@@ -97,16 +98,15 @@ int SADofDescriptors (const FeaturePoint &fp1, const FeaturePoint &fp2)
 const FeaturePoint *
 findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candidates, const cv::Rect &area)
 {
-    int minError = FeatureMatcher::SAD_32x48 (p.matchingDescriptor, candidates[0].matchingDescriptor);
-    // SADofDescriptors (p, candidates[0]);
+    int minError = FeatureMatcher::SAD_8x48 (p.matchingDescriptor, candidates[0].matchingDescriptor);
+
     const FeaturePoint *matchedPoint = &candidates[0];
     for (int i = 0; i < candidates.size (); i++)
     {
         if (area.contains (cv::Point (p.col, p.row)))
         {
 
-            int error = FeatureMatcher::SAD_32x48 (candidates[i].matchingDescriptor, p.matchingDescriptor);
-            // SADofDescriptors (candidates[i], p);
+            int error = FeatureMatcher::SAD_8x48 (candidates[i].matchingDescriptor, p.matchingDescriptor);
 
             if (error < minError)
             {

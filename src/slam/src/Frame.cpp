@@ -6,8 +6,8 @@
 
 Frame::Frame (cv::Mat &img)
 : image (img), integralImage (cv::Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
-  xSobel (cv::Mat::zeros (image.rows, image.cols, CV_32S)),
-  ySobel (cv::Mat::zeros (image.rows, image.cols, CV_32S)),
+  xSobel (cv::Mat::zeros (image.rows, image.cols, CV_8U)),
+  ySobel (cv::Mat::zeros (image.rows, image.cols, CV_8U)),
   blobConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S)),
   cornerConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S))
 {
@@ -155,9 +155,10 @@ cv::Mat &Frame::doXSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize s
 {
     const int w = image.cols, h = image.rows;
 
-    cv::Mat image32;
-    image.convertTo (image32, CV_32S);
-    result.convertTo (result, CV_32S);
+    cv::Mat image16;
+    image.convertTo (image16, CV_16S);
+    result.convertTo (result, CV_16S);
+
 
     switch (size)
     {
@@ -170,14 +171,21 @@ cv::Mat &Frame::doXSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize s
 
         assert (w >= 3 && h >= 3);
 
-        cv::Mat rowMult (h, w, CV_32S, cv::Scalar::all (0));
+        cv::Mat rowMult (h, w, CV_16S, cv::Scalar::all (0));
 
-        rowMult (cv::Rect (0, 1, w, h - 2)) = image32 (cv::Rect (0, 0, w, h - 2)) +
-                                              2 * image32 (cv::Rect (0, 1, w, h - 2)) +
-                                              image32 (cv::Rect (0, 2, w, h - 2));
+        rowMult (cv::Rect (0, 1, w, h - 2)) = image16 (cv::Rect (0, 0, w, h - 2)) +
+                                              2 * image16 (cv::Rect (0, 1, w, h - 2)) +
+                                              image16 (cv::Rect (0, 2, w, h - 2));
+
+        //   std::cout << "\n" << "rowMult " << "\n" << rowMult << "\n";
 
         result (cv::Rect (1, 1, w - 2, h - 2)) =
-        -rowMult (cv::Rect (0, 1, w - 2, h - 2)) + rowMult (cv::Rect (2, 1, w - 2, h - 2));
+        (-rowMult (cv::Rect (0, 1, w - 2, h - 2)) + rowMult (cv::Rect (2, 1, w - 2, h - 2)));
+        result (cv::Rect (1, 1, w - 2, h - 2)) = result (cv::Rect (1, 1, w - 2, h - 2)) / 4 + 128;
+        result.convertTo (result, CV_8U);
+
+        //   std::cout << "\n" << "result " << "\n" << result << "\n";
+
         break;
     }
     case SS_5:
@@ -191,24 +199,27 @@ cv::Mat &Frame::doXSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize s
 
         assert (w >= 5 && h >= 5);
 
-        cv::Mat rowMult1 (h, w, CV_32S, cv::Scalar::all (0));
-        cv::Mat rowMult2 (h, w, CV_32S, cv::Scalar::all (0));
+        cv::Mat rowMult1 (h, w, CV_16S, cv::Scalar::all (0));
+        cv::Mat rowMult2 (h, w, CV_16S, cv::Scalar::all (0));
 
         rowMult1 (cv::Rect (0, 2, w, h - 4)) =
-        5 * image32 (cv::Rect (0, 0, w, h - 4)) + 8 * image32 (cv::Rect (0, 1, w, h - 4)) +
-        10 * image32 (cv::Rect (0, 2, w, h - 4)) + 8 * image32 (cv::Rect (0, 3, w, h - 4)) +
-        5 * image32 (cv::Rect (0, 4, w, h - 4));
+        5 * image16 (cv::Rect (0, 0, w, h - 4)) + 8 * image16 (cv::Rect (0, 1, w, h - 4)) +
+        10 * image16 (cv::Rect (0, 2, w, h - 4)) + 8 * image16 (cv::Rect (0, 3, w, h - 4)) +
+        5 * image16 (cv::Rect (0, 4, w, h - 4));
 
 
         rowMult2 (cv::Rect (1, 2, w - 2, h - 4)) =
-        4 * image32 (cv::Rect (1, 0, w - 2, h - 4)) + 10 * image32 (cv::Rect (1, 1, w - 2, h - 4)) +
-        20 * image32 (cv::Rect (1, 2, w - 2, h - 4)) +
-        10 * image32 (cv::Rect (1, 3, w - 2, h - 4)) + 4 * image32 (cv::Rect (1, 4, w - 2, h - 4));
+        4 * image16 (cv::Rect (1, 0, w - 2, h - 4)) + 10 * image16 (cv::Rect (1, 1, w - 2, h - 4)) +
+        20 * image16 (cv::Rect (1, 2, w - 2, h - 4)) +
+        10 * image16 (cv::Rect (1, 3, w - 2, h - 4)) + 4 * image16 (cv::Rect (1, 4, w - 2, h - 4));
 
 
         result (cv::Rect (2, 2, w - 4, h - 4)) =
-        -rowMult1 (cv::Rect (0, 2, w - 4, h - 4)) - rowMult2 (cv::Rect (1, 2, w - 4, h - 4)) +
-        rowMult2 (cv::Rect (3, 2, w - 4, h - 4)) + rowMult1 (cv::Rect (4, 2, w - 4, h - 4));
+        (-rowMult1 (cv::Rect (0, 2, w - 4, h - 4)) - rowMult2 (cv::Rect (1, 2, w - 4, h - 4)) +
+         rowMult2 (cv::Rect (3, 2, w - 4, h - 4)) + rowMult1 (cv::Rect (4, 2, w - 4, h - 4)));
+
+        result (cv::Rect (2, 2, w - 4, h - 4)) = result (cv::Rect (2, 2, w - 4, h - 4)) / 84 + 128;
+        result.convertTo (result, CV_8U);
         break;
     }
     }
@@ -221,9 +232,9 @@ cv::Mat &Frame::doYSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize s
 {
     const int w = image.cols, h = image.rows;
 
-    cv::Mat image32;
-    image.convertTo (image32, CV_32S);
-    result.convertTo (result, CV_32S);
+    cv::Mat image16;
+    image.convertTo (image16, CV_16S);
+    result.convertTo (result, CV_16S);
 
     switch (size)
     {
@@ -236,14 +247,16 @@ cv::Mat &Frame::doYSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize s
 
         assert (w >= 3 && h >= 3);
 
-        cv::Mat rowMult (result.rows, result.cols, CV_32S, cv::Scalar::all (0));
+        cv::Mat rowMult (result.rows, result.cols, CV_16S, cv::Scalar::all (0));
 
         rowMult (cv::Rect (0, 1, w, h - 2)) =
-        image32 (cv::Rect (0, 0, w, h - 2)) - image32 (cv::Rect (0, 2, w, h - 2));
+        image16 (cv::Rect (0, 0, w, h - 2)) - image16 (cv::Rect (0, 2, w, h - 2));
 
         result (cv::Rect (1, 1, w - 2, h - 2)) = rowMult (cv::Rect (0, 1, w - 2, h - 2)) +
                                                  2 * rowMult (cv::Rect (1, 1, w - 2, h - 2)) +
                                                  rowMult (cv::Rect (2, 1, w - 2, h - 2));
+        result (cv::Rect (1, 1, w - 2, h - 2)) = result (cv::Rect (1, 1, w - 2, h - 2)) / 4 + 128;
+        result.convertTo (result, CV_8U);
         break;
     }
     case SS_5:
@@ -257,24 +270,27 @@ cv::Mat &Frame::doYSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize s
 
         assert (w >= 5 && h >= 5);
 
-        cv::Mat rowMult1 (h, w, CV_32S, cv::Scalar::all (0));
-        cv::Mat rowMult2 (h, w, CV_32S, cv::Scalar::all (0));
+        cv::Mat rowMult1 (h, w, CV_16S, cv::Scalar::all (0));
+        cv::Mat rowMult2 (h, w, CV_16S, cv::Scalar::all (0));
 
         rowMult1 (cv::Rect (2, 0, w - 4, h)) =
-        5 * image32 (cv::Rect (0, 0, w - 4, h)) + 8 * image32 (cv::Rect (1, 0, w - 4, h)) +
-        10 * image32 (cv::Rect (2, 0, w - 4, h)) + 8 * image32 (cv::Rect (3, 0, w - 4, h)) +
-        5 * image32 (cv::Rect (4, 0, w - 4, h));
+        5 * image16 (cv::Rect (0, 0, w - 4, h)) + 8 * image16 (cv::Rect (1, 0, w - 4, h)) +
+        10 * image16 (cv::Rect (2, 0, w - 4, h)) + 8 * image16 (cv::Rect (3, 0, w - 4, h)) +
+        5 * image16 (cv::Rect (4, 0, w - 4, h));
 
 
         rowMult2 (cv::Rect (2, 1, w - 4, h - 2)) =
-        4 * image32 (cv::Rect (0, 1, w - 4, h - 2)) + 10 * image32 (cv::Rect (1, 1, w - 4, h - 2)) +
-        20 * image32 (cv::Rect (2, 1, w - 4, h - 2)) +
-        10 * image32 (cv::Rect (3, 1, w - 4, h - 2)) + 4 * image32 (cv::Rect (4, 1, w - 4, h - 2));
+        4 * image16 (cv::Rect (0, 1, w - 4, h - 2)) + 10 * image16 (cv::Rect (1, 1, w - 4, h - 2)) +
+        20 * image16 (cv::Rect (2, 1, w - 4, h - 2)) +
+        10 * image16 (cv::Rect (3, 1, w - 4, h - 2)) + 4 * image16 (cv::Rect (4, 1, w - 4, h - 2));
 
 
         result (cv::Rect (2, 2, w - 4, h - 4)) =
         -rowMult1 (cv::Rect (2, 0, w - 4, h - 4)) - rowMult2 (cv::Rect (2, 1, w - 4, h - 4)) +
         rowMult2 (cv::Rect (2, 3, w - 4, h - 4)) + rowMult1 (cv::Rect (2, 4, w - 4, h - 4));
+
+        result (cv::Rect (2, 2, w - 4, h - 4)) = result (cv::Rect (2, 2, w - 4, h - 4)) / 84 + 128;
+        result.convertTo (result, CV_8U);
 
         break;
     }

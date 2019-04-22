@@ -254,10 +254,11 @@ TEST (Frame, doXSobelConvolutionTest)
     Mat sobels[n] = { sobel3, sobel5 };
     int ns[n] = { n3, n5 };
     Frame::sobelSize ss[n] = { Frame::SS_3, Frame::SS_5 };
+    int div[n] = { 4, 84 };
 
     int minSize = 5;
     int maxSize = 1000;
-    int times = 10000;
+    int times = 1000;
     int rows, cols;
 
     for (int i = 0; i < times; i++)
@@ -272,12 +273,14 @@ TEST (Frame, doXSobelConvolutionTest)
         {
 
             Mat temp, expected_result;
-            Mat result (rows, cols, CV_32S, Scalar::all (0));
+            Mat result (rows, cols, CV_8U, Scalar::all (0));
             image.convertTo (temp, CV_32F);
 
             filter2D (temp, expected_result, -1, sobels[j]);
+            expected_result.convertTo (expected_result, CV_16S);
+            expected_result = expected_result / div[j] + 128;
             rectangle (expected_result, Rect (Point (0, 0), expected_result.size ()), Scalar::all (0), ns[j]);
-            expected_result.convertTo (expected_result, CV_32S);
+            expected_result.convertTo (expected_result, CV_8U);
 
             EXPECT_TRUE (countNonZero (Frame::doXSobelConvolution (image, result, ss[j]) != expected_result) == 0)
             << "image" << endl
@@ -303,6 +306,7 @@ TEST (Frame, doYSobelConvolutionTest)
     const int n = 2;
     Mat sobels[n] = { sobel3, sobel5 };
     int ns[n] = { n3, n5 };
+    int div[n] = { 4, 84 };
     Frame::sobelSize ss[n] = { Frame::SS_3, Frame::SS_5 };
 
 
@@ -322,12 +326,16 @@ TEST (Frame, doYSobelConvolutionTest)
         {
 
             Mat temp, expected_result;
-            Mat result (rows, cols, CV_32S, Scalar::all (0));
+            Mat result (rows, cols, CV_8U, Scalar::all (0));
             image.convertTo (temp, CV_32F);
 
+
             filter2D (temp, expected_result, -1, sobels[j]);
+            expected_result.convertTo (expected_result, CV_16S);
+            expected_result = expected_result / div[j] + 128;
             rectangle (expected_result, Rect (Point (0, 0), expected_result.size ()), Scalar::all (0), ns[j]);
-            expected_result.convertTo (expected_result, CV_32S);
+            expected_result.convertTo (expected_result, CV_8U);
+
 
             EXPECT_TRUE (countNonZero (Frame::doYSobelConvolution (image, result, ss[j]) != expected_result) == 0)
             << "image" << endl
