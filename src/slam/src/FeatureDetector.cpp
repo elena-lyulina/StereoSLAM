@@ -25,6 +25,28 @@ FeatureDetector::FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair
             }
         }
     }
+
+
+    // todo: log it
+    int allPoints = 0;
+    for (int i = 0; i < FRAME_AMOUNT; i++)
+    {
+        allPoints = 0;
+        std::cout << "BlobMax points: " << detectedPoints[i][BLOB_MAX].size();
+        allPoints += detectedPoints[i][BLOB_MAX].size();
+
+        std::cout << ", BlobMin points: " << detectedPoints[i][BLOB_MIN].size();
+        allPoints += detectedPoints[i][BLOB_MIN].size();
+
+        std::cout << ", CornerMax points: " << detectedPoints[i][CORNER_MAX].size();
+        allPoints += detectedPoints[i][CORNER_MAX].size();
+
+        std::cout << ", CornerMin points: " << detectedPoints[i][CORNER_MIN].size();
+        allPoints += detectedPoints[i][CORNER_MIN].size();
+
+        std::cout << ", all points: " << allPoints << "\n";
+    }
+
 }
 std::vector<FeaturePoint> &FeatureDetector::getDetectedPoints (frameNumber frame, pointType type)
 {

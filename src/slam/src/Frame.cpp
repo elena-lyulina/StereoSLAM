@@ -11,6 +11,8 @@ Frame::Frame (cv::Mat &img)
   blobConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S)),
   cornerConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S))
 {
+    // todo: log it
+    std::cout << "frame width: " << image.cols << ", frame height: " << image.rows << "\n";
     fillSum ();
     doXSobelConvolution (image, xSobel, SS_5);
     doYSobelConvolution (image, ySobel, SS_5);
