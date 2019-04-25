@@ -103,7 +103,7 @@ findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candi
     const FeaturePoint *matchedPoint = &candidates[0];
     for (int i = 0; i < candidates.size (); i++)
     {
-        if (area.contains (cv::Point (p.col, p.row)))
+        if (area.contains (cv::Point (candidates[i].col, candidates[i].row)))
         {
 
             int error = FeatureMatcher::SAD_8x48 (candidates[i].matchingDescriptor, p.matchingDescriptor);
@@ -126,9 +126,6 @@ const std::vector<FeaturePoint> &rightSucc,
 const std::vector<FeaturePoint> &leftSucc,
 std::vector<std::tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, const FeaturePoint *>> &matched)
 {
-
-    int stripWidth = 1;
-    int areaWidth = 50;
 
     for (int i = 0; i < leftPred.size (); i++)
     {

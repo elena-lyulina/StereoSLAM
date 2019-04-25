@@ -20,6 +20,9 @@ class FeatureMatcher
                           const int32_t (&arr2)[FeaturePoint::mdSize]);
     static int SAD_32x8 (__m256i a1, __m256i a2);
 
+    static const int stripWidth = 1;
+    static const int areaWidth = 50;
+
     private:
     static void doMatchingCircle (const std::vector<FeaturePoint> &leftPred,
                                   const std::vector<FeaturePoint> &rightPred,

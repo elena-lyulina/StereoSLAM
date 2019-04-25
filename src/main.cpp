@@ -30,13 +30,6 @@ int main (int argc, char *argv[])
         return 1;
     }
 
-    //    int k = 5;
-    //    Frame frame (filename1);
-    //
-    //    vector<pair<int, int>> max, min;
-    //    Frame::suppression2D (k, frame.getCornerConvolution (), max, min);
-    //    cout << endl << "size: " << max.size () << " " << min.size () << endl;
-
 
     pair<Frame, Frame> prevImages = { Frame (filename1), Frame (filename2) };
     pair<Frame, Frame> succImage = { Frame (filename3), Frame (filename4) };
@@ -45,6 +38,6 @@ int main (int argc, char *argv[])
 
     cout << ft.getCyclicallyMatchedPoints ()->size () << endl;
 
-   // pointType types[TYPE_AMOUNT] = { BLOB_MAX, BLOB_MIN, CORNER_MAX, CORNER_MIN };
-    //ft.showMP (TYPE_AMOUNT, types);
+   pointType types[TYPE_AMOUNT] = { BLOB_MAX, BLOB_MIN, CORNER_MAX, CORNER_MIN };
+   ft.showMP (TYPE_AMOUNT, types);
 }

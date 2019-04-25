@@ -5,7 +5,6 @@ FeatureDetector::FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair
 : predFrames (&predFrames), succFrames (&succFrames)
 {
 
-    int supprArea = 5;
     Frame *frames[FRAME_AMOUNT] = { &predFrames.first, &predFrames.second, &succFrames.second,
                                     &succFrames.first };
 
@@ -13,8 +12,8 @@ FeatureDetector::FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair
 
     for (int i = 0; i < FRAME_AMOUNT; i++)
     {
-        frames[i]->suppression2D (supprArea, frames[i]->getBlobConvolution (), coord[i][0], coord[i][1]);
-        frames[i]->suppression2D (supprArea, frames[i]->getCornerConvolution (), coord[i][2], coord[i][3]);
+        frames[i]->suppression2D (supprArea, frames[i]->getBlobConvolution (), coord[i][BLOB_MAX], coord[i][BLOB_MIN]);
+        frames[i]->suppression2D (supprArea, frames[i]->getCornerConvolution (), coord[i][CORNER_MAX], coord[i][CORNER_MIN]);
 
         for (int k = 0; k < TYPE_AMOUNT; k++)
         {

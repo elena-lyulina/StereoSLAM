@@ -10,9 +10,11 @@ class FeatureDetector
     public:
     FeatureDetector (std::pair<Frame, Frame> &predFrames, std::pair<Frame, Frame> &succFrames);
     std::vector<FeaturePoint> &getDetectedPoints (frameNumber frame, pointType type);
+    static const int supprArea = 5;
 
 
-    private:
+
+  private:
     std::pair<Frame, Frame> *predFrames;
     std::pair<Frame, Frame> *succFrames;
 

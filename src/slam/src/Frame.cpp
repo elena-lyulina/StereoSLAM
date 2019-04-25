@@ -29,7 +29,7 @@ void Frame::fillSum ()
     int current_line_sum = 0;
 
     // assuming that the first column and raw are filled with zeros
-    // fill other rows, using sum of previous rows
+    // fill other rows using sum of previous rows
     for (int i = 0; i < image.rows; i++)
     {
         current_line_sum = 0;
