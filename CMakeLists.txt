@@ -9,10 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+# adding glog
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+find_package(Glog REQUIRED)
+
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-add_subdirectory(src)
-
 
 # adding google benchmark
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Suppressing benchmark's tests" FORCE)
@@ -24,4 +26,8 @@ add_subdirectory(bench)
 add_subdirectory(${PROJECT_SOURCE_DIR}/thirdparty/googletest)
 enable_testing()
 add_subdirectory(test)
+
+
+add_subdirectory(src)
+
 

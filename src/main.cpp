@@ -3,6 +3,7 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <glog/logging.h>
 
 using namespace std;
 using namespace cv;
@@ -10,6 +11,8 @@ using namespace cv;
 
 int main (int argc, char *argv[])
 {
+    google::InitGoogleLogging(argv[0]);
+
     const char *filename1;
     const char *filename2;
     const char *filename3;
