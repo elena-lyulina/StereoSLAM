@@ -20,3 +20,4 @@ enum frameNumber
     FRAME_AMOUNT
 
 };
+

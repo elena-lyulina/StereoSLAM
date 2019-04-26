@@ -3,19 +3,20 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
 #include <opencv2/imgproc.hpp>
+#include <fstream>
 
 Frame::Frame (cv::Mat &img)
-: image (img), integralImage (cv::Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
-  xSobel (cv::Mat::zeros (image.rows, image.cols, CV_8U)),
-  ySobel (cv::Mat::zeros (image.rows, image.cols, CV_8U)),
-  blobConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S)),
-  cornerConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S))
+    : image (img), integralImage (cv::Mat::zeros (image.rows + 1, image.cols + 1, CV_32S)),
+      xSobel (cv::Mat::zeros (image.rows, image.cols, CV_8U)),
+      ySobel (cv::Mat::zeros (image.rows, image.cols, CV_8U)),
+      blobConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S)),
+      cornerConvolution (cv::Mat::zeros (image.rows, image.cols, CV_32S))
 {
     // todo: log it
     std::cout << "frame width: " << image.cols << ", frame height: " << image.rows << "\n";
     fillSum ();
-    doXSobelConvolution (image, xSobel, SS_5);
-    doYSobelConvolution (image, ySobel, SS_5);
+    doXSobelConvolution (image, xSobel, SS_3);
+    doYSobelConvolution (image, ySobel, SS_3);
     doBlobConvolution (blobConvolution);
     doCornerConvolution (cornerConvolution);
 }
@@ -47,7 +48,7 @@ void Frame::fillSum ()
 int Frame::rectSum (int x, int y, int width, int height)
 {
     return integralImage.at<uint> (y + height, x + width) - integralImage.at<uint> (y + height, x) -
-           integralImage.at<uint> (y, x + width) + integralImage.at<uint> (y, x);
+        integralImage.at<uint> (y, x + width) + integralImage.at<uint> (y, x);
 }
 
 
@@ -59,9 +60,9 @@ cv::Mat &Frame::rectSumMat (int sideLength, cv::Mat &result)
     int n = sideLength / 2;
 
     result = integralImage (cv::Rect (sideLength, sideLength, width, height)) -
-             integralImage (cv::Rect (0, sideLength, width, height)) +
-             integralImage (cv::Rect (0, 0, width, height)) -
-             integralImage (cv::Rect (sideLength, 0, width, height));
+        integralImage (cv::Rect (0, sideLength, width, height)) +
+        integralImage (cv::Rect (0, 0, width, height)) -
+        integralImage (cv::Rect (sideLength, 0, width, height));
 
     copyMakeBorder (result, result, n, n, n, n, cv::BORDER_CONSTANT);
 
@@ -84,13 +85,13 @@ cv::Mat &Frame::doBlobConvolution (cv::Mat &result)
     const int w = image.cols - 4, h = image.rows - 4;
 
     result (cv::Rect (2, 2, w, h)) =
-    2 * integralImage (cv::Rect (4, 4, w, h)) - 2 * integralImage (cv::Rect (1, 4, w, h)) +
-    2 * integralImage (cv::Rect (1, 1, w, h)) - 2 * integralImage (cv::Rect (4, 1, w, h))
+        2 * integralImage (cv::Rect (4, 4, w, h)) - 2 * integralImage (cv::Rect (1, 4, w, h)) +
+            2 * integralImage (cv::Rect (1, 1, w, h)) - 2 * integralImage (cv::Rect (4, 1, w, h))
 
-    - integralImage (cv::Rect (5, 5, w, h)) + integralImage (cv::Rect (0, 5, w, h)) -
-    integralImage (cv::Rect (0, 0, w, h)) + integralImage (cv::Rect (5, 0, w, h))
+            - integralImage (cv::Rect (5, 5, w, h)) + integralImage (cv::Rect (0, 5, w, h)) -
+            integralImage (cv::Rect (0, 0, w, h)) + integralImage (cv::Rect (5, 0, w, h))
 
-    + 7 * temp (cv::Rect (2, 2, w, h));
+            + 7 * temp (cv::Rect (2, 2, w, h));
 
 
     return result;
@@ -112,12 +113,12 @@ cv::Mat &Frame::doCornerConvolution (cv::Mat &result)
     const int w = temp.cols, h = temp.rows;
 
     rowMult (cv::Rect (0, 2, w, h - 4)) =
-    temp (cv::Rect (0, 0, w, h - 4)) + temp (cv::Rect (0, 1, w, h - 4)) -
-    temp (cv::Rect (0, 3, w, h - 4)) - temp (cv::Rect (0, 4, w, h - 4));
+        temp (cv::Rect (0, 0, w, h - 4)) + temp (cv::Rect (0, 1, w, h - 4)) -
+            temp (cv::Rect (0, 3, w, h - 4)) - temp (cv::Rect (0, 4, w, h - 4));
 
     result (cv::Rect (2, 2, w - 4, h - 4)) =
-    -rowMult (cv::Rect (0, 2, w - 4, h - 4)) - rowMult (cv::Rect (1, 2, w - 4, h - 4)) +
-    rowMult (cv::Rect (3, 2, w - 4, h - 4)) + rowMult (cv::Rect (4, 2, w - 4, h - 4));
+        -rowMult (cv::Rect (0, 2, w - 4, h - 4)) - rowMult (cv::Rect (1, 2, w - 4, h - 4)) +
+            rowMult (cv::Rect (3, 2, w - 4, h - 4)) + rowMult (cv::Rect (4, 2, w - 4, h - 4));
     return result;
 }
 
@@ -152,6 +153,28 @@ const cv::Mat &Frame::getCornerConvolution ()
     return cornerConvolution;
 }
 
+void writeToFile(cv::Mat &mat, std::string file) {
+    int depth = mat.type () & CV_MAT_DEPTH_MASK;
+
+    std::ofstream out;
+    out.open(file);
+    if (out.is_open())
+    {
+        for (int i = 16; i < mat.rows - 16; i++) {
+            for (int j = 16; j < mat.cols - 16; j++) {
+                if (depth == CV_16S) {
+                    out << mat.at<int16_t>(i, j) << " ";
+                }
+                if (depth == CV_8U) {
+                    out << +mat.at<uint8_t>(i, j) << " ";
+                }
+                if (depth == CV_8S) {
+                    out << +mat.at<int8_t>(i, j) << " ";
+                }
+            }
+        }
+    }
+}
 
 cv::Mat &Frame::doXSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size)
 {
@@ -164,71 +187,109 @@ cv::Mat &Frame::doXSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize s
 
     switch (size)
     {
-    case SS_3:
-    {
-        // 3x3 x-Sobel kernel:
-        //   -1  0  1     [1]
-        //   -2  0  2  =  [2] * [-1, 0, 1]
-        //   -1  0  1     [1]
+        case SS_3:
+        {
+            // 3x3 x-Sobel kernel:
+            //   -1  0  1     [1]
+            //   -2  0  2  =  [2] * [-1, 0, 1]
+            //   -1  0  1     [1]
 
-        assert (w >= 3 && h >= 3);
+            assert (w >= 3 && h >= 3);
 
-        cv::Mat rowMult (h, w, CV_16S, cv::Scalar::all (0));
+            cv::Mat rowMult (h, w, CV_16S, cv::Scalar::all (0));
 
-        rowMult (cv::Rect (0, 1, w, h - 2)) = image16 (cv::Rect (0, 0, w, h - 2)) +
-                                              2 * image16 (cv::Rect (0, 1, w, h - 2)) +
-                                              image16 (cv::Rect (0, 2, w, h - 2));
+            rowMult (cv::Rect (0, 1, w, h - 2)) = image16 (cv::Rect (0, 0, w, h - 2)) +
+                2 * image16 (cv::Rect (0, 1, w, h - 2)) +
+                image16 (cv::Rect (0, 2, w, h - 2));
 
-        //   std::cout << "\n" << "rowMult " << "\n" << rowMult << "\n";
+            //   std::cout << "\n" << "rowMult " << "\n" << rowMult << "\n";
 
-        result (cv::Rect (1, 1, w - 2, h - 2)) =
-        (-rowMult (cv::Rect (0, 1, w - 2, h - 2)) + rowMult (cv::Rect (2, 1, w - 2, h - 2)));
-        result (cv::Rect (1, 1, w - 2, h - 2)) = result (cv::Rect (1, 1, w - 2, h - 2)) / 4 + 128;
-        result.convertTo (result, CV_8U);
+            result (cv::Rect (1, 1, w - 2, h - 2)) =
+                (-rowMult (cv::Rect (0, 1, w - 2, h - 2)) + rowMult (cv::Rect (2, 1, w - 2, h - 2)));
+            result (cv::Rect (1, 1, w - 2, h - 2)) = result (cv::Rect (1, 1, w - 2, h - 2)) / 4 + 128;
+            result.convertTo (result, CV_8U);
 
-        //   std::cout << "\n" << "result " << "\n" << result << "\n";
+            //   std::cout << "\n" << "result " << "\n" << result << "\n";
 
-        break;
+            break;
+        }
+        case SS_5:
+        {
+            // 5x5 x-Sobel kernel:
+            //   -5  -4   0  4   5      [5 ]                       [4 ]
+            //   -8  -10  0  10  8      [8 ]                       [10]
+            //   -10 -20  0  20  10  =  [10] * [-1, 0, 0, 0, 1] +  [20] * [0, -1, 0, 1, 0]
+            //   -8  -10  0  10  8      [8 ]                       [10]
+            //   -5  -4   0  4   5      [5 ]                       [4 ]
+
+            assert (w >= 5 && h >= 5);
+
+            cv::Mat rowMult1 (h, w, CV_16S, cv::Scalar::all (0));
+            cv::Mat rowMult2 (h, w, CV_16S, cv::Scalar::all (0));
+
+            rowMult1 (cv::Rect (0, 2, w, h - 4)) =
+                5 * image16 (cv::Rect (0, 0, w, h - 4)) + 8 * image16 (cv::Rect (0, 1, w, h - 4)) +
+                    10 * image16 (cv::Rect (0, 2, w, h - 4)) + 8 * image16 (cv::Rect (0, 3, w, h - 4)) +
+                    5 * image16 (cv::Rect (0, 4, w, h - 4));
+
+
+            rowMult2 (cv::Rect (1, 2, w - 2, h - 4)) =
+                4 * image16 (cv::Rect (1, 0, w - 2, h - 4)) + 10 * image16 (cv::Rect (1, 1, w - 2, h - 4)) +
+                    20 * image16 (cv::Rect (1, 2, w - 2, h - 4)) +
+                    10 * image16 (cv::Rect (1, 3, w - 2, h - 4)) + 4 * image16 (cv::Rect (1, 4, w - 2, h - 4));
+
+
+            result (cv::Rect (2, 2, w - 4, h - 4)) =
+                (-rowMult1 (cv::Rect (0, 2, w - 4, h - 4)) - rowMult2 (cv::Rect (1, 2, w - 4, h - 4)) +
+                    rowMult2 (cv::Rect (3, 2, w - 4, h - 4)) + rowMult1 (cv::Rect (4, 2, w - 4, h - 4)));
+
+
+            writeToFile(result, "/home/elena/workspaces/c++/StereoSLAM/res/x_sobel.txt");
+
+            result (cv::Rect (2, 2, w - 4, h - 4)) = result (cv::Rect (2, 2, w - 4, h - 4)) / 84;
+
+            writeToFile(result, "/home/elena/workspaces/c++/StereoSLAM/res/x_sobel_dsh.txt");
+
+
+            // todo: log it
+
+            int16_t max = std::numeric_limits<int16_t>::min();
+            int16_t min = std::numeric_limits<int16_t>::max();
+
+            for (int i = 16; i < result.rows - 16; i++)
+            {
+                for (int j = 16; j < result.cols - 16; j++)
+                {
+                    if (min > result.at<int16_t>(i, j))
+                    {
+                        min = result.at<int16_t>(i, j);
+                    }
+
+                    if (max < result.at<int16_t>(i, j))
+                    {
+                        max = result.at<int16_t>(i, j);
+                    }
+                }
+            }
+
+            std::cout << "Min value:  " << min << "\n";
+            std::cout << "Max value:  " << max << "\n";
+
+            result.convertTo (result, CV_8U);
+
+            writeToFile(result, "/home/elena/workspaces/c++/StereoSLAM/res/x_sobel_conv.txt");
+
+            break;
+
+        }
     }
-    case SS_5:
-    {
-        // 5x5 x-Sobel kernel:
-        //   -5  -4   0  4   5      [5 ]                       [4 ]
-        //   -8  -10  0  10  8      [8 ]                       [10]
-        //   -10 -20  0  20  10  =  [10] * [-1, 0, 0, 0, 1] +  [20] * [0, -1, 0, 1, 0]
-        //   -8  -10  0  10  8      [8 ]                       [10]
-        //   -5  -4   0  4   5      [5 ]                       [4 ]
 
-        assert (w >= 5 && h >= 5);
-
-        cv::Mat rowMult1 (h, w, CV_16S, cv::Scalar::all (0));
-        cv::Mat rowMult2 (h, w, CV_16S, cv::Scalar::all (0));
-
-        rowMult1 (cv::Rect (0, 2, w, h - 4)) =
-        5 * image16 (cv::Rect (0, 0, w, h - 4)) + 8 * image16 (cv::Rect (0, 1, w, h - 4)) +
-        10 * image16 (cv::Rect (0, 2, w, h - 4)) + 8 * image16 (cv::Rect (0, 3, w, h - 4)) +
-        5 * image16 (cv::Rect (0, 4, w, h - 4));
-
-
-        rowMult2 (cv::Rect (1, 2, w - 2, h - 4)) =
-        4 * image16 (cv::Rect (1, 0, w - 2, h - 4)) + 10 * image16 (cv::Rect (1, 1, w - 2, h - 4)) +
-        20 * image16 (cv::Rect (1, 2, w - 2, h - 4)) +
-        10 * image16 (cv::Rect (1, 3, w - 2, h - 4)) + 4 * image16 (cv::Rect (1, 4, w - 2, h - 4));
-
-
-        result (cv::Rect (2, 2, w - 4, h - 4)) =
-        (-rowMult1 (cv::Rect (0, 2, w - 4, h - 4)) - rowMult2 (cv::Rect (1, 2, w - 4, h - 4)) +
-         rowMult2 (cv::Rect (3, 2, w - 4, h - 4)) + rowMult1 (cv::Rect (4, 2, w - 4, h - 4)));
-
-        result (cv::Rect (2, 2, w - 4, h - 4)) = result (cv::Rect (2, 2, w - 4, h - 4)) / 84 + 128;
-        result.convertTo (result, CV_8U);
-        break;
-    }
-    }
 
 
     return result;
 }
+
+
 
 cv::Mat &Frame::doYSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size)
 {
@@ -240,62 +301,70 @@ cv::Mat &Frame::doYSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize s
 
     switch (size)
     {
-    case SS_3:
-    {
-        // 3x3 y-Sobel kernel:
-        //    1  2  1     [1]
-        //    0  0  0  =  [0] * [1, 2, 1]
-        //   -1 -2 -1     [-1]
+        case SS_3:
+        {
+            // 3x3 y-Sobel kernel:
+            //    1  2  1     [1]
+            //    0  0  0  =  [0] * [1, 2, 1]
+            //   -1 -2 -1     [-1]
 
-        assert (w >= 3 && h >= 3);
+            assert (w >= 3 && h >= 3);
 
-        cv::Mat rowMult (result.rows, result.cols, CV_16S, cv::Scalar::all (0));
+            cv::Mat rowMult (result.rows, result.cols, CV_16S, cv::Scalar::all (0));
 
-        rowMult (cv::Rect (0, 1, w, h - 2)) =
-        image16 (cv::Rect (0, 0, w, h - 2)) - image16 (cv::Rect (0, 2, w, h - 2));
+            rowMult (cv::Rect (0, 1, w, h - 2)) =
+                image16 (cv::Rect (0, 0, w, h - 2)) - image16 (cv::Rect (0, 2, w, h - 2));
 
-        result (cv::Rect (1, 1, w - 2, h - 2)) = rowMult (cv::Rect (0, 1, w - 2, h - 2)) +
-                                                 2 * rowMult (cv::Rect (1, 1, w - 2, h - 2)) +
-                                                 rowMult (cv::Rect (2, 1, w - 2, h - 2));
-        result (cv::Rect (1, 1, w - 2, h - 2)) = result (cv::Rect (1, 1, w - 2, h - 2)) / 4 + 128;
-        result.convertTo (result, CV_8U);
-        break;
-    }
-    case SS_5:
-    {
-        // 5x5 y-Sobel kernel:
-        //   -5  -8   -10  -8  -5      [-1]                       [ 0]
-        //   -4  -10  -20  -10 -4      [ 0]                       [-1]
-        //    0   0    0    0   0  =   [ 0] * [5, 8, 10, 8, 5] +  [ 0] * [4, 10, 20, 10, 4]
-        //    4   10   20   10  4      [ 0]                       [ 1]
-        //    5   8    10   8   5      [ 1]                       [ 0]
+            result (cv::Rect (1, 1, w - 2, h - 2)) = rowMult (cv::Rect (0, 1, w - 2, h - 2)) +
+                2 * rowMult (cv::Rect (1, 1, w - 2, h - 2)) +
+                rowMult (cv::Rect (2, 1, w - 2, h - 2));
+            result (cv::Rect (1, 1, w - 2, h - 2)) = result (cv::Rect (1, 1, w - 2, h - 2)) / 4 + 128;
+            result.convertTo (result, CV_8U);
+            break;
+        }
+        case SS_5:
+        {
+            // 5x5 y-Sobel kernel:
+            //   -5  -8   -10  -8  -5      [-1]                       [ 0]
+            //   -4  -10  -20  -10 -4      [ 0]                       [-1]
+            //    0   0    0    0   0  =   [ 0] * [5, 8, 10, 8, 5] +  [ 0] * [4, 10, 20, 10, 4]
+            //    4   10   20   10  4      [ 0]                       [ 1]
+            //    5   8    10   8   5      [ 1]                       [ 0]
 
-        assert (w >= 5 && h >= 5);
+            assert (w >= 5 && h >= 5);
 
-        cv::Mat rowMult1 (h, w, CV_16S, cv::Scalar::all (0));
-        cv::Mat rowMult2 (h, w, CV_16S, cv::Scalar::all (0));
+            cv::Mat rowMult1 (h, w, CV_16S, cv::Scalar::all (0));
+            cv::Mat rowMult2 (h, w, CV_16S, cv::Scalar::all (0));
 
-        rowMult1 (cv::Rect (2, 0, w - 4, h)) =
-        5 * image16 (cv::Rect (0, 0, w - 4, h)) + 8 * image16 (cv::Rect (1, 0, w - 4, h)) +
-        10 * image16 (cv::Rect (2, 0, w - 4, h)) + 8 * image16 (cv::Rect (3, 0, w - 4, h)) +
-        5 * image16 (cv::Rect (4, 0, w - 4, h));
-
-
-        rowMult2 (cv::Rect (2, 1, w - 4, h - 2)) =
-        4 * image16 (cv::Rect (0, 1, w - 4, h - 2)) + 10 * image16 (cv::Rect (1, 1, w - 4, h - 2)) +
-        20 * image16 (cv::Rect (2, 1, w - 4, h - 2)) +
-        10 * image16 (cv::Rect (3, 1, w - 4, h - 2)) + 4 * image16 (cv::Rect (4, 1, w - 4, h - 2));
+            rowMult1 (cv::Rect (2, 0, w - 4, h)) =
+                5 * image16 (cv::Rect (0, 0, w - 4, h)) + 8 * image16 (cv::Rect (1, 0, w - 4, h)) +
+                    10 * image16 (cv::Rect (2, 0, w - 4, h)) + 8 * image16 (cv::Rect (3, 0, w - 4, h)) +
+                    5 * image16 (cv::Rect (4, 0, w - 4, h));
 
 
-        result (cv::Rect (2, 2, w - 4, h - 4)) =
-        -rowMult1 (cv::Rect (2, 0, w - 4, h - 4)) - rowMult2 (cv::Rect (2, 1, w - 4, h - 4)) +
-        rowMult2 (cv::Rect (2, 3, w - 4, h - 4)) + rowMult1 (cv::Rect (2, 4, w - 4, h - 4));
+            rowMult2 (cv::Rect (2, 1, w - 4, h - 2)) =
+                4 * image16 (cv::Rect (0, 1, w - 4, h - 2)) + 10 * image16 (cv::Rect (1, 1, w - 4, h - 2)) +
+                    20 * image16 (cv::Rect (2, 1, w - 4, h - 2)) +
+                    10 * image16 (cv::Rect (3, 1, w - 4, h - 2)) + 4 * image16 (cv::Rect (4, 1, w - 4, h - 2));
 
-        result (cv::Rect (2, 2, w - 4, h - 4)) = result (cv::Rect (2, 2, w - 4, h - 4)) / 84 + 128;
-        result.convertTo (result, CV_8U);
 
-        break;
-    }
+            result (cv::Rect (2, 2, w - 4, h - 4)) =
+                -rowMult1 (cv::Rect (2, 0, w - 4, h - 4)) - rowMult2 (cv::Rect (2, 1, w - 4, h - 4)) +
+                    rowMult2 (cv::Rect (2, 3, w - 4, h - 4)) + rowMult1 (cv::Rect (2, 4, w - 4, h - 4));
+
+            writeToFile(result, "/home/elena/workspaces/c++/StereoSLAM/res/y_sobel.txt");
+
+            result (cv::Rect (2, 2, w - 4, h - 4)) = result (cv::Rect (2, 2, w - 4, h - 4)) / 84 + 128;
+
+            writeToFile(result, "/home/elena/workspaces/c++/StereoSLAM/res/y_sobel_dsh.txt");
+
+            result.convertTo (result, CV_8U);
+
+            writeToFile(result, "/home/elena/workspaces/c++/StereoSLAM/res/y_sobel_conv.txt");
+
+
+            break;
+        }
     }
 
 

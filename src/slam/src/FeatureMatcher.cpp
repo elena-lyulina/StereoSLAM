@@ -2,25 +2,34 @@
 #include <emmintrin.h>
 #include <immintrin.h>
 #include <opencv/cv.hpp>
-
+#include <fstream>
 
 FeatureMatcher::FeatureMatcher (FeatureDetector &fd)
 {
     doMatchingCircle (fd.getDetectedPoints (LEFT_PRED, BLOB_MAX), fd.getDetectedPoints (RIGHT_PRED, BLOB_MAX),
                       fd.getDetectedPoints (RIGHT_SUCC, BLOB_MAX),
-                      fd.getDetectedPoints (LEFT_SUCC, BLOB_MAX), matchedPoints[BLOB_MAX]);
+                      fd.getDetectedPoints (LEFT_SUCC, BLOB_MAX), matchedPoints[BLOB_MAX],
+                      "/home/elena/workspaces/c++/StereoSLAM/res/errors1.txt");
 
     doMatchingCircle (fd.getDetectedPoints (LEFT_PRED, BLOB_MIN), fd.getDetectedPoints (RIGHT_PRED, BLOB_MIN),
                       fd.getDetectedPoints (RIGHT_SUCC, BLOB_MIN),
-                      fd.getDetectedPoints (LEFT_SUCC, BLOB_MIN), matchedPoints[BLOB_MIN]);
+                      fd.getDetectedPoints (LEFT_SUCC, BLOB_MIN), matchedPoints[BLOB_MIN],
+                      "/home/elena/workspaces/c++/StereoSLAM/res/errors2.txt");
 
     doMatchingCircle (fd.getDetectedPoints (LEFT_PRED, CORNER_MAX), fd.getDetectedPoints (RIGHT_PRED, CORNER_MAX),
                       fd.getDetectedPoints (RIGHT_SUCC, CORNER_MAX),
-                      fd.getDetectedPoints (LEFT_SUCC, CORNER_MAX), matchedPoints[CORNER_MAX]);
+                      fd.getDetectedPoints (LEFT_SUCC, CORNER_MAX), matchedPoints[CORNER_MAX],
+                      "/home/elena/workspaces/c++/StereoSLAM/res/errors3.txt");
 
     doMatchingCircle (fd.getDetectedPoints (LEFT_PRED, CORNER_MIN), fd.getDetectedPoints (RIGHT_PRED, CORNER_MIN),
                       fd.getDetectedPoints (RIGHT_SUCC, CORNER_MIN),
-                      fd.getDetectedPoints (LEFT_SUCC, CORNER_MIN), matchedPoints[CORNER_MIN]);
+                      fd.getDetectedPoints (LEFT_SUCC, CORNER_MIN), matchedPoints[CORNER_MIN],
+                      "/home/elena/workspaces/c++/StereoSLAM/res/errors4.txt");
+
+ //todo: log it
+ std::cout << "Matched points: " << getMatchedPoints (BLOB_MAX).size() + getMatchedPoints (BLOB_MIN).size() + getMatchedPoints (CORNER_MAX).size() + getMatchedPoints (CORNER_MIN).size() << "\n";
+
+
 }
 
 
@@ -60,7 +69,7 @@ int FeatureMatcher::SAD_32x48 (const int32_t (&arr1)[FeaturePoint::mdSize],
     __m256i f2 = _mm256_loadu_si256 ((__m256i *)(arr2 + 40));
 
     return SAD_32x8 (a1, a2) + SAD_32x8 (b1, b2) + SAD_32x8 (c1, c2) + SAD_32x8 (d1, d2) +
-           SAD_32x8 (e1, e2) + SAD_32x8 (f1, f2);
+        SAD_32x8 (e1, e2) + SAD_32x8 (f1, f2);
 }
 
 int FeatureMatcher::SAD_8x48 (const uint8_t (&arr1)[FeaturePoint::mdSize],
@@ -77,28 +86,30 @@ int FeatureMatcher::SAD_8x48 (const uint8_t (&arr1)[FeaturePoint::mdSize],
     __m128i b2 = _mm_loadu_si128 ((__m128i *)(arr2 + 32));
     __m128i sad2 = _mm_sad_epu8 (b1, b2);
 
-
+// todo: hadd_64
     int a = _mm_extract_epi16 (sad2, 0) + _mm_extract_epi16 (sad2, 4) +
-            _mm256_extract_epi16 (sad1, 0) + _mm256_extract_epi16 (sad1, 4) +
-            _mm256_extract_epi16 (sad1, 8) + _mm256_extract_epi16 (sad1, 12);
+        _mm256_extract_epi16 (sad1, 0) + _mm256_extract_epi16 (sad1, 4) +
+        _mm256_extract_epi16 (sad1, 8) + _mm256_extract_epi16 (sad1, 12);
 
     return a;
 }
 
-int SADofDescriptors (const FeaturePoint &fp1, const FeaturePoint &fp2)
+
+int SAD (const uint8_t (&arr1)[FeaturePoint::mdSize],
+         const uint8_t (&arr2)[FeaturePoint::mdSize])
 {
-    const int N = FeaturePoint::mdSize;
     int sad = 0;
-    for (int i = 0; i < N; ++i)
-        sad += std::abs (fp1.matchingDescriptor[i] - fp2.matchingDescriptor[i]);
+    for (int i = 0; i < FeaturePoint::mdSize; i++) {
+        sad += abs(arr1[i] - arr2[i]);
+    }
     return sad;
 }
 
 
 const FeaturePoint *
-findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candidates, const cv::Rect &area)
+findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candidates, const cv::Rect &area, std::ofstream &out)
 {
-    int minError = FeatureMatcher::SAD_8x48 (p.matchingDescriptor, candidates[0].matchingDescriptor);
+    int minError = std::numeric_limits<int>::max();
 
     const FeaturePoint *matchedPoint = &candidates[0];
     for (int i = 0; i < candidates.size (); i++)
@@ -107,6 +118,7 @@ findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candi
         {
 
             int error = FeatureMatcher::SAD_8x48 (candidates[i].matchingDescriptor, p.matchingDescriptor);
+          //  int error = SAD (candidates[i].matchingDescriptor, p.matchingDescriptor);
 
             if (error < minError)
             {
@@ -115,50 +127,60 @@ findMatchesOnArea (const FeaturePoint &p, const std::vector<FeaturePoint> &candi
             }
         }
     }
+    out << minError << " ";
+
 
     return matchedPoint;
 }
 
+
+
 void FeatureMatcher::doMatchingCircle (
-const std::vector<FeaturePoint> &leftPred,
-const std::vector<FeaturePoint> &rightPred,
-const std::vector<FeaturePoint> &rightSucc,
-const std::vector<FeaturePoint> &leftSucc,
-std::vector<std::tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, const FeaturePoint *>> &matched)
+    const std::vector<FeaturePoint> &leftPred,
+    const std::vector<FeaturePoint> &rightPred,
+    const std::vector<FeaturePoint> &rightSucc,
+    const std::vector<FeaturePoint> &leftSucc,
+    std::vector<std::tuple<const FeaturePoint *, const FeaturePoint *, const FeaturePoint *, const FeaturePoint *>> &matched,
+    std::string file)
 {
+    std::ofstream out;
+    out.open(file);
 
-    for (int i = 0; i < leftPred.size (); i++)
-    {
-        // checking strip on right pred image, it should be to the right of leftPred[i]
-        const FeaturePoint *rpMatchedPoint =
-        findMatchesOnArea (leftPred[i], rightPred,
-                           cv::Rect (leftPred[i].col, leftPred[i].row - stripWidth,
-                                     leftPred[i].w - leftPred[i].col, 2 * stripWidth));
+    if (out.is_open()) {
+        for (int i = 0; i < leftPred.size(); i++) {
+            // checking strip on right pred image, it should be to the left of leftPred[i]
+            const FeaturePoint *rpMatchedPoint =
+                findMatchesOnArea(leftPred[i], rightPred,
+                                  cv::Rect(0, leftPred[i].row - stripWidth,
+                                           leftPred[i].col, 2 * stripWidth), out);
 
-        // checking area on right succ image
-        const FeaturePoint *rsMatchedPoint =
-        findMatchesOnArea (*rpMatchedPoint, rightSucc,
-                           cv::Rect (rpMatchedPoint->col - areaWidth,
-                                     rpMatchedPoint->row - areaWidth, 2 * areaWidth, 2 * areaWidth));
+            // checking area on right succ image
+            const FeaturePoint *rsMatchedPoint =
+                findMatchesOnArea(*rpMatchedPoint, rightSucc,
+                                  cv::Rect(rpMatchedPoint->col - areaWidth,
+                                           rpMatchedPoint->row - areaWidth, 2 * areaWidth, 2 * areaWidth), out);
 
-        // checking strip on left succ image, it should be to the left of rsMatchedPoint
-        const FeaturePoint *lsMatchedPoint =
-        findMatchesOnArea (*rsMatchedPoint, leftSucc,
-                           cv::Rect (rsMatchedPoint->col, rsMatchedPoint->row - stripWidth,
-                                     rsMatchedPoint->w - rsMatchedPoint->col, 2 * stripWidth));
+            // checking strip on left succ image, it should be to the right of rsMatchedPoint
+            const FeaturePoint *lsMatchedPoint =
+                findMatchesOnArea(*rsMatchedPoint, leftSucc,
+                                  cv::Rect(rsMatchedPoint->col, rsMatchedPoint->row - stripWidth,
+                                           rsMatchedPoint->w - rsMatchedPoint->col, 2 * stripWidth), out);
 
-        // checking are on left pred image
-        const FeaturePoint *lpMatchedPoint =
-        findMatchesOnArea (*lsMatchedPoint, leftPred,
-                           cv::Rect (lsMatchedPoint->col - areaWidth,
-                                     lsMatchedPoint->row - areaWidth, 2 * areaWidth, 2 * areaWidth));
+            // checking are on left pred image
+            const FeaturePoint *lpMatchedPoint =
+                findMatchesOnArea(*lsMatchedPoint, leftPred,
+                                  cv::Rect(lsMatchedPoint->col - areaWidth,
+                                           lsMatchedPoint->row - areaWidth, 2 * areaWidth, 2 * areaWidth), out);
 
-        if (&leftPred[i] == lpMatchedPoint)
-        {
-            matched.emplace_back (lpMatchedPoint, rpMatchedPoint, rsMatchedPoint, lsMatchedPoint);
+            if (&leftPred[i] == lpMatchedPoint) {
+                matched.emplace_back(lpMatchedPoint, rpMatchedPoint, rsMatchedPoint, lsMatchedPoint);
+            }
         }
     }
+
 }
+
+
 
 std::vector<fp_tuple> FeatureMatcher::getMatchedPoints (pointType type)
 {

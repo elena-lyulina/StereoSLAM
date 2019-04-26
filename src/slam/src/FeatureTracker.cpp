@@ -64,6 +64,27 @@ void FeatureTracker::showMPOnImages (cv::Mat *imagesRGB, pointType type)
     cv::waitKey ();
 }
 
+void FeatureTracker::showNMPOnImages (cv::Mat *imagesRGB, pointType type, cv::Scalar color)
+{
+    for (int fn = LEFT_PRED; fn < FRAME_AMOUNT; fn++)
+    {
+
+        std::vector<FeaturePoint> &points = fd.getDetectedPoints(static_cast<frameNumber >(fn), type);
+
+        for (int i = 0; i < points.size (); i++)
+
+        {
+            circle (imagesRGB[fn], cv::Point (points[i].col, points[i].row), 3, color, -1);
+        }
+
+        namedWindow ("image" + std::to_string (fn), cv::WINDOW_AUTOSIZE);
+        imshow ("image" + std::to_string (fn), imagesRGB[fn]);
+    }
+
+
+    cv::waitKey ();
+}
+
 void FeatureTracker::showMP (int typeAmount, pointType types[])
 {
     cv::Mat imagesRGB[FRAME_AMOUNT];
@@ -71,5 +92,15 @@ void FeatureTracker::showMP (int typeAmount, pointType types[])
     for (int i = 0; i < typeAmount; i++)
     {
         showMPOnImages (imagesRGB, types[i]);
+    }
+}
+
+void FeatureTracker::showNMP (int typeAmount, pointType types[])
+{
+    cv::Mat imagesRGB[FRAME_AMOUNT];
+    getImagesRGB (imagesRGB);
+    for (int i = 0; i < typeAmount; i++)
+    {
+        showNMPOnImages (imagesRGB, types[i], colors[i]);
     }
 }

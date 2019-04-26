@@ -21,6 +21,7 @@ class FeatureMatcher
     static int SAD_32x8 (__m256i a1, __m256i a2);
 
     static const int stripWidth = 5;
+    // todo: 200x200
     static const int areaWidth = 100;
 
     private:
@@ -28,7 +29,9 @@ class FeatureMatcher
                                   const std::vector<FeaturePoint> &rightPred,
                                   const std::vector<FeaturePoint> &rightSucc,
                                   const std::vector<FeaturePoint> &leftSucc,
-                                  std::vector<fp_tuple> &matched);
+                                  std::vector<fp_tuple> &matched,
+                                  std::string file);
+
 
 
     std::vector<fp_tuple> matchedPoints[TYPE_AMOUNT];

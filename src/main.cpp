@@ -36,8 +36,10 @@ int main (int argc, char *argv[])
 
     FeatureTracker ft (prevImages, succImage);
 
-    cout << ft.getCyclicallyMatchedPoints ()->size () << endl;
+
 
    pointType types[TYPE_AMOUNT] = { BLOB_MAX, BLOB_MIN, CORNER_MAX, CORNER_MIN };
-   ft.showMP (TYPE_AMOUNT, types);
+  // ft.showMP (TYPE_AMOUNT, types);
+   ft.showNMP (TYPE_AMOUNT, types);
+
 }

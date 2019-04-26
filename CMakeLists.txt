@@ -3,6 +3,7 @@ project(StereoSLAM)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${Cmake_CXX_FLAGS} -march=native -O3 -DNDEBUG" )
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
