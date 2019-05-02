@@ -21,20 +21,19 @@ class Frame
         SS_5 = 5
     };
 
-    static cv::Mat &doXSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size);
-    static cv::Mat &doYSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size);
+    static const cv::Mat &doXSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size);
+    static const cv::Mat &doYSobelConvolution (cv::Mat image, cv::Mat &result, sobelSize size);
 
 
     int rectSum (int x, int y, int width, int height);
 
-    cv::Mat &doBlobConvolution (cv::Mat &result);
-    cv::Mat &doCornerConvolution (cv::Mat &result);
+    const cv::Mat &doBlobConvolution (cv::Mat &result);
+    const cv::Mat &doCornerConvolution (cv::Mat &result);
 
 
     /*
      Founded on (2n + 1) × (2n + 1)-Block Algorithm from "Efficient Non-Maximum Suppression",
      Alexander Neubeck, Luc Van Gool;
-     if comp == 1, then it found local maximum, else - local minimum
      fills vector of pairs(i, j), where i stands for row's coordinate, j - for col's coordinate
      */
 
@@ -42,7 +41,6 @@ class Frame
                                const cv::Mat &image,
                                std::vector<std::pair<int, int>> &maxResult,
                                std::vector<std::pair<int, int>> &minResult);
-
 
     private:
     cv::Mat image;

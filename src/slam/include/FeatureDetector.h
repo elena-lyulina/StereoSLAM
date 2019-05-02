@@ -13,8 +13,7 @@ class FeatureDetector
     static const int supprArea = 5;
 
 
-
-  private:
+    private:
     std::pair<Frame, Frame> *predFrames;
     std::pair<Frame, Frame> *succFrames;
 

@@ -21,3 +21,10 @@ enum frameNumber
 
 };
 
+struct parameters
+{
+    double f; // focal length in pixels
+    double cu; // principal point (u-coordinate) in pixels
+    double cv; // principal point (v-coordinate) in pixels
+    double base; // baseline in meters
+};
